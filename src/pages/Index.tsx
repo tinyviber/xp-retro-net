@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Monitor, Network, Folder, FileText, Router, Terminal } from "lucide-react";
+import type { JSX } from "react";
+import { Network, Router, Terminal } from "lucide-react";
 import { DesktopIcon } from "@/components/DesktopIcon";
 import { NetworkConfig } from "@/components/NetworkConfig";
 import { RouterConfig } from "@/components/RouterConfig";
@@ -9,6 +10,7 @@ import { VirtualTerminal } from "@/components/VirtualTerminal";
 import { exercises } from "@/data/exercises";
 import { executeVirtualCommand } from "@/lib/virtualCommands";
 import {
+  DesktopTool,
   ExerciseDefinition,
   NetworkAdapterConfig,
   NetworkSettings,
@@ -26,7 +28,26 @@ const numberToIp = (value: number) =>
     .map((shift) => ((value >> shift) & 255).toString())
     .join(".");
 
-const createDhcpLease = (settings: RouterSettings): NetworkSettings => {
+const createDhcpLease = (
+  settings: RouterSettings,
+  exercise: ExerciseDefinition
+): NetworkSettings | null => {
+  if (!settings.dhcpEnabled) {
+    return null;
+  }
+
+  if (exercise.dhcpStatus === "unavailable") {
+    return null;
+  }
+
+  if (
+    exercise.dhcpStatus === "pool-exhausted" &&
+    settings.dhcpRangeStart === exercise.initialRouter.dhcpRangeStart &&
+    settings.dhcpRangeEnd === exercise.initialRouter.dhcpRangeEnd
+  ) {
+    return null;
+  }
+
   const startInt = ipToNumber(settings.dhcpRangeStart);
   const endInt = ipToNumber(settings.dhcpRangeEnd);
   const leaseInt = startInt <= endInt ? startInt : endInt;
@@ -66,11 +87,20 @@ const createApipaFallback = (
 
 const createInitialAdapterConfig = (
   exercise: ExerciseDefinition
-): NetworkAdapterConfig => ({
-  ...exercise.initialNetwork,
-  ipMode: exercise.initialNetwork.ipAddress ? "manual" : "auto",
-  dnsMode: exercise.initialNetwork.dns ? "manual" : "auto",
-});
+): NetworkAdapterConfig => {
+  const ipMode =
+    exercise.initialModes?.ip ??
+    (exercise.initialNetwork.ipAddress ? "manual" : "auto");
+  const dnsMode =
+    exercise.initialModes?.dns ??
+    (exercise.initialNetwork.dns ? "manual" : "auto");
+
+  return {
+    ...exercise.initialNetwork,
+    ipMode,
+    dnsMode,
+  };
+};
 
 const Index = () => {
   const [activeExerciseId, setActiveExerciseId] = useState(exercises[0].id);
@@ -90,7 +120,7 @@ const Index = () => {
   const [dhcpLease, setDhcpLease] = useState<NetworkSettings | null>(() => {
     const initialAdapter = createInitialAdapterConfig(activeExercise);
     if (initialAdapter.ipMode === "auto" && activeExercise.initialRouter.dhcpEnabled) {
-      return createDhcpLease(activeExercise.initialRouter);
+      return createDhcpLease(activeExercise.initialRouter, activeExercise);
     }
     return null;
   });
@@ -104,7 +134,7 @@ const Index = () => {
     setIsRouterConfigOpen(false);
     setDhcpLease(
       activeExercise.initialRouter.dhcpEnabled && nextAdapter.ipMode === "auto"
-        ? createDhcpLease(activeExercise.initialRouter)
+        ? createDhcpLease(activeExercise.initialRouter, activeExercise)
         : null
     );
   }, [activeExercise]);
@@ -127,15 +157,17 @@ const Index = () => {
     }
 
     if (routerSettings.dhcpEnabled) {
-      const lease = dhcpLease ?? createDhcpLease(routerSettings);
-      const dns = adapterConfig.dnsMode === "manual" ? adapterConfig.dns : lease.dns;
+      const lease = dhcpLease ?? createDhcpLease(routerSettings, activeExercise);
+      if (lease) {
+        const dns = adapterConfig.dnsMode === "manual" ? adapterConfig.dns : lease.dns;
 
-      return {
-        ipAddress: lease.ipAddress,
-        subnetMask: lease.subnetMask,
-        gateway: lease.gateway,
-        dns,
-      };
+        return {
+          ipAddress: lease.ipAddress,
+          subnetMask: lease.subnetMask,
+          gateway: lease.gateway,
+          dns,
+        };
+      }
     }
 
     const fallback = createApipaFallback(activeExercise);
@@ -157,7 +189,13 @@ const Index = () => {
       return;
     }
 
-    const lease = createDhcpLease(routerSettings);
+    const lease = createDhcpLease(routerSettings, activeExercise);
+
+    if (!lease) {
+      setDhcpLease((previous) => (previous ? null : previous));
+      return;
+    }
+
     setDhcpLease((previous) => {
       if (
         previous &&
@@ -185,10 +223,11 @@ const Index = () => {
     routerSettings.lanSubnetMask,
     routerSettings.dhcpDns,
     dhcpLease,
+    activeExercise,
   ]);
 
   const handleExecuteCommand = (command: string) => {
-    const output = executeVirtualCommand(command, effectiveNetwork);
+    const output = executeVirtualCommand(command, effectiveNetwork, activeExercise, routerSettings);
 
     setTerminalHistory((previous) => {
       const next = [...previous, `C:\\> ${command}`];
@@ -209,68 +248,91 @@ const Index = () => {
     setTerminalHistory((previous) => [...previous, "系统: 路由器配置已更新。"]);
   };
 
+  const toolConfigs: Record<DesktopTool, { icon: JSX.Element; label: string; onOpen: () => void }> = {
+    router: {
+      icon: <Router className="text-green-500" />,
+      label: "路由器",
+      onOpen: () => setIsRouterConfigOpen(true),
+    },
+    network: {
+      icon: <Network className="text-blue-600" />,
+      label: "网络适配器",
+      onOpen: () => setIsNetworkConfigOpen(true),
+    },
+    terminal: {
+      icon: <Terminal className="text-green-500" />,
+      label: "命令提示符",
+      onOpen: () => setIsTerminalOpen(true),
+    },
+  };
+
   return (
     <div className="min-h-screen flex flex-col pb-12">
-      <div className="flex-1 p-6 pb-20 space-y-6">
-        <header className="text-left space-y-2">
-          <h1 className="text-2xl font-bold text-white drop-shadow">
-            网络故障排查模拟器
-          </h1>
-          <p className="text-sm text-white/90">
-            选择一个练习场景，使用虚拟终端与网络配置工具完成排查，并记录你的操作。
-          </p>
-        </header>
+      <div className="flex-1 flex">
+        <aside className="w-full lg:w-[360px] bg-[hsl(var(--win-panel))] border-r-2 border-[hsl(var(--border))] flex flex-col">
+          <div className="p-4 border-b-2 border-[hsl(var(--border))] space-y-2">
+            <h1 className="text-xl font-bold text-black">网络故障排查模拟器</h1>
+            <p className="text-xs text-black/70">
+              从下方列表选择练习，阅读场景说明，再到右侧桌面使用指定工具完成排查。
+            </p>
+          </div>
 
-        <div className="flex flex-wrap gap-3">
-          {exercises.map((exercise) => {
-            const isActive = exercise.id === activeExerciseId;
-            return (
-              <button
-                key={exercise.id}
-                onClick={() => setActiveExerciseId(exercise.id)}
-                className={`win-button px-4 py-2 text-sm ${
-                  isActive ? "bg-[hsl(var(--secondary))]" : ""
-                }`}
-              >
-                {exercise.title}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid lg:grid-cols-[320px_minmax(0,1fr)] gap-6 auto-rows-fr">
-          <ProblemDescription exercise={activeExercise} />
-
-          <div className="space-y-4 h-full flex flex-col">
-            <div className="win-window flex-1 flex flex-col">
-              <div className="win-titlebar">
-                <span className="text-sm font-semibold">虚拟桌面</span>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                {exercises.map((exercise) => {
+                  const isActive = exercise.id === activeExerciseId;
+                  return (
+                    <button
+                      key={exercise.id}
+                      onClick={() => setActiveExerciseId(exercise.id)}
+                      className={`w-full text-left px-3 py-2 text-sm win-button ${
+                        isActive ? "bg-[hsl(var(--secondary))]" : ""
+                      }`}
+                    >
+                      {exercise.title}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="p-6 flex-1">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 h-full items-start content-start">
-                  <DesktopIcon icon={<Monitor className="text-blue-600" />} label="我的电脑" />
-                  <DesktopIcon
-                    icon={<Network className="text-blue-600" />}
-                    label="网络"
-                    onDoubleClick={() => setIsNetworkConfigOpen(true)}
-                  />
-                  <DesktopIcon
-                    icon={<Router className="text-green-500" />}
-                    label="路由器"
-                    onDoubleClick={() => setIsRouterConfigOpen(true)}
-                  />
-                  <DesktopIcon icon={<Folder className="text-yellow-500" />} label="我的文档" />
-                  <DesktopIcon icon={<FileText className="text-white" />} label="回收站" />
-                  <DesktopIcon
-                    icon={<Terminal className="text-green-500" />}
-                    label="命令提示符"
-                    onDoubleClick={() => setIsTerminalOpen(true)}
-                  />
-                </div>
-              </div>
+
+              <ProblemDescription exercise={activeExercise} />
             </div>
           </div>
-        </div>
+        </aside>
+
+        <main className="flex-1 p-6 pb-20 flex flex-col gap-6">
+          <div className="win-window flex-1 flex flex-col">
+            <div className="win-titlebar">
+              <span className="text-sm font-semibold">虚拟桌面</span>
+            </div>
+            <div className="p-6 flex-1">
+              {activeExercise.desktopTools.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 h-full items-start content-start">
+                  {activeExercise.desktopTools.map((tool) => {
+                    const config = toolConfigs[tool];
+                    if (!config) {
+                      return null;
+                    }
+
+                    return (
+                      <DesktopIcon
+                        key={tool}
+                        icon={config.icon}
+                        label={config.label}
+                        onDoubleClick={config.onOpen}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm text-white/80">此练习暂不需要桌面工具。</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
       </div>
 
       <Taskbar />

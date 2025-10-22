@@ -1,16 +1,9 @@
-import { NetworkSettings } from "@/types/network";
+import { ExerciseDefinition, NetworkSettings, RouterSettings } from "@/types/network";
 
 const IPV4_REGEX =
   /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
 
 const PUBLIC_DNS = new Set(["8.8.8.8", "1.1.1.1", "114.114.114.114", "223.5.5.5"]);
-
-const DOMAIN_IP_MAP: Record<string, string> = {
-  "baidu.com": "39.156.66.14",
-  "bing.com": "204.79.197.200",
-  "example.com": "93.184.216.34",
-  "google.com": "142.250.72.14",
-};
 
 const ipToInt = (ip: string) =>
   ip.split(".").reduce((acc, part) => (acc << 8) + Number(part), 0);
@@ -67,29 +60,28 @@ const formatPingTimeout = (target: string) => {
   ].join("\n");
 };
 
-const formatNslookupSuccess = (domain: string, dns: string) => {
-  const resolvedIp = DOMAIN_IP_MAP[domain] ?? "93.184.216.34";
+const formatPingConflict = (target: string) => {
+  const header = `正在 Ping ${target} 具有 32 字节的数据:`;
   return [
-    `服务器:  ${dns === "8.8.8.8" ? "google-public-dns-a.google.com" : "公共 DNS 服务器"}`,
-    `Address:  ${dns}`,
+    header,
+    "请求超时。",
+    "请求超时。",
+    "请求超时。",
+    "请求超时。",
     "",
-    "非权威应答:",
-    `名称:    ${domain}`,
-    `Address:  ${resolvedIp}`,
+    "Ping 统计信息:",
+    "    已发送 = 4，已接收 = 0，丢失 = 4 (100% 丢失)",
+    "",
+    "提示: 检测到当前主机 IP 可能与网络中的其他设备冲突，请修改为唯一地址。",
   ].join("\n");
 };
 
-const formatNslookupFailure = (domain: string, dns: string) => {
-  const dnsDisplay = dns || "0.0.0.0";
-  return [
-    "服务器:  UnKnown",
-    `Address:  ${dnsDisplay}`,
-    "",
-    `*** UnKnown 找不到 ${domain}: Non-existent domain`,
-  ].join("\n");
-};
-
-const handlePing = (args: string[], config: NetworkSettings) => {
+const handlePing = (
+  args: string[],
+  config: NetworkSettings,
+  exercise: ExerciseDefinition,
+  router: RouterSettings
+) => {
   if (args.length === 0) {
     return "用法: ping <目标地址>";
   }
@@ -98,17 +90,36 @@ const handlePing = (args: string[], config: NetworkSettings) => {
   const { ipAddress, subnetMask, gateway, dns } = config;
   const isIpTarget = IPV4_REGEX.test(target);
 
+  if (exercise.conflictingIp && config.ipAddress === exercise.conflictingIp) {
+    return formatPingConflict(target);
+  }
+
   if (!isIpTarget) {
+    const resolvedIp = exercise.domainMap[target];
+
+    if (!resolvedIp) {
+      return `Ping 请求找不到主机 ${target}。请检查该名称并重试。`;
+    }
+
     if (!isPublicDns(dns) || !hasValidGateway(gateway)) {
       return `Ping 请求找不到主机 ${target}。请检查该名称并重试。`;
     }
 
-    const resolvedIp = DOMAIN_IP_MAP[target] ?? "93.184.216.34";
+    if (!router.wanConnected) {
+      return formatPingTimeout(target);
+    }
+
     return formatPingSuccess(target, resolvedIp);
   }
 
   if (inSameSubnet(ipAddress, target, subnetMask)) {
     return formatPingSuccess(target, target);
+  }
+
+  if (exercise.requiresSubnetMatchForGateway && target === router.lanGateway) {
+    if (subnetMask !== router.lanSubnetMask) {
+      return formatPingTimeout(target);
+    }
   }
 
   if (!hasValidGateway(gateway)) {
@@ -119,25 +130,22 @@ const handlePing = (args: string[], config: NetworkSettings) => {
     return formatPingTimeout(target);
   }
 
+  if (
+    !router.wanConnected &&
+    !inSameSubnet(router.lanGateway, target, router.lanSubnetMask)
+  ) {
+    return formatPingTimeout(target);
+  }
+
   return formatPingSuccess(target, target);
 };
 
-const handleNslookup = (args: string[], config: NetworkSettings) => {
-  if (args.length === 0) {
-    return "用法: nslookup <域名>";
-  }
-
-  const domain = args[0].toLowerCase();
-  const { dns } = config;
-
-  if (!isPublicDns(dns)) {
-    return formatNslookupFailure(domain, dns);
-  }
-
-  return formatNslookupSuccess(domain, dns);
-};
-
-export const executeVirtualCommand = (command: string, config: NetworkSettings) => {
+export const executeVirtualCommand = (
+  command: string,
+  config: NetworkSettings,
+  exercise: ExerciseDefinition,
+  router: RouterSettings
+) => {
   const trimmed = command.trim();
 
   if (!trimmed) {
@@ -151,9 +159,7 @@ export const executeVirtualCommand = (command: string, config: NetworkSettings) 
     case "ipconfig":
       return formatIpConfig(config);
     case "ping":
-      return handlePing(args, config);
-    case "nslookup":
-      return handleNslookup(args, config);
+      return handlePing(args, config, exercise, router);
     default:
       return `'${rawCommand}' 不是内部或外部命令，也不是可运行的程序\n或批处理文件。`;
   }

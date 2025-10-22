@@ -19,7 +19,20 @@ export interface RouterSettings {
   dhcpRangeStart: string;
   dhcpRangeEnd: string;
   dhcpDns: string;
+  wanConnected: boolean;
+  wanIp?: string;
+  wanGateway?: string;
 }
+
+export type DesktopTool = "router" | "network" | "terminal";
+
+export interface PingTarget {
+  name: string;
+  ip: string;
+  description?: string;
+}
+
+export type DhcpStatus = "normal" | "unavailable" | "pool-exhausted";
 
 export interface ExerciseDefinition {
   id: number;
@@ -30,4 +43,22 @@ export interface ExerciseDefinition {
   hints: string[];
   initialNetwork: NetworkSettings;
   initialRouter: RouterSettings;
+  initialModes?: {
+    ip: AssignmentMode;
+    dns: AssignmentMode;
+  };
+  initialSetup: {
+    router: string[];
+    computer: string[];
+  };
+  allowedActions: string[];
+  symptoms: string[];
+  resolution: string[];
+  takeaways: string[];
+  pingTargets: PingTarget[];
+  domainMap: Record<string, string>;
+  desktopTools: DesktopTool[];
+  dhcpStatus?: DhcpStatus;
+  requiresSubnetMatchForGateway?: boolean;
+  conflictingIp?: string;
 }
