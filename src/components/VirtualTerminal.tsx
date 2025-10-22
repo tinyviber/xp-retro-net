@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface VirtualTerminalProps {
   history: string[];
@@ -8,7 +8,9 @@ interface VirtualTerminalProps {
 export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) => {
   const [command, setCommand] = useState("");
   const scrollTargetRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isActiveRef = useRef(false);
 
   useEffect(() => {
     if (scrollTargetRef.current) {
@@ -24,8 +26,7 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const runCommand = useCallback(() => {
     const trimmed = command.trim();
 
     if (!trimmed) {
@@ -34,14 +35,78 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
 
     onExecute(trimmed);
     setCommand("");
+  }, [command, onExecute]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    runCommand();
   };
 
   const focusInput = () => {
+    isActiveRef.current = true;
     inputRef.current?.focus();
   };
 
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+
+      if (!container.contains(event.target as Node)) {
+        isActiveRef.current = false;
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isActiveRef.current || !inputRef.current) {
+        return;
+      }
+
+      if (document.activeElement === inputRef.current) {
+        return;
+      }
+
+      const hasModifier = event.metaKey || event.ctrlKey || event.altKey;
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        runCommand();
+        inputRef.current.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        setCommand((previous) => previous.slice(0, -1));
+        inputRef.current.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key.length === 1 && !hasModifier) {
+        event.preventDefault();
+        inputRef.current.focus({ preventScroll: true });
+        setCommand((previous) => previous + event.key);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [runCommand]);
+
   return (
-    <div className="win-window h-full flex flex-col" onClick={focusInput}>
+    <div
+      ref={containerRef}
+      className="win-window h-full flex flex-col"
+      onClick={focusInput}
+      onMouseDownCapture={focusInput}
+    >
       <div className="win-titlebar">
         <span className="text-sm font-semibold">命令提示符</span>
       </div>
@@ -65,7 +130,14 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
           onChange={(event) => setCommand(event.target.value)}
           className="flex-1 bg-neutral-900 text-green-200 px-2 py-1 font-mono text-sm focus:outline-none"
           autoComplete="off"
+          autoFocus
           type="text"
+          onFocus={() => {
+            isActiveRef.current = true;
+          }}
+          onBlur={() => {
+            isActiveRef.current = false;
+          }}
         />
       </form>
     </div>
