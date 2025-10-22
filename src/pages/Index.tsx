@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Monitor, Network, Folder, FileText, Router } from "lucide-react";
+import { Monitor, Network, Folder, FileText, Router, Terminal } from "lucide-react";
 import { DesktopIcon } from "@/components/DesktopIcon";
 import { NetworkConfig } from "@/components/NetworkConfig";
 import { RouterConfig } from "@/components/RouterConfig";
@@ -88,6 +88,7 @@ const Index = () => {
   const [isNetworkConfigOpen, setIsNetworkConfigOpen] = useState(false);
   const [routerSettings, setRouterSettings] = useState<RouterSettings>({ ...activeExercise.initialRouter });
   const [isRouterConfigOpen, setIsRouterConfigOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [dhcpLease, setDhcpLease] = useState<NetworkSettings | null>(() => {
     const initialAdapter = createInitialAdapterConfig(activeExercise);
     if (initialAdapter.ipMode === "auto" && activeExercise.initialRouter.dhcpEnabled) {
@@ -248,7 +249,7 @@ const Index = () => {
                 <span className="text-sm font-semibold">虚拟桌面</span>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-fit">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   <DesktopIcon icon={<Monitor className="text-blue-600" />} label="我的电脑" />
                   <DesktopIcon
                     icon={<Network className="text-blue-600" />}
@@ -262,11 +263,14 @@ const Index = () => {
                   />
                   <DesktopIcon icon={<Folder className="text-yellow-500" />} label="我的文档" />
                   <DesktopIcon icon={<FileText className="text-white" />} label="回收站" />
+                  <DesktopIcon
+                    icon={<Terminal className="text-green-500" />}
+                    label="命令提示符"
+                    onDoubleClick={() => setIsTerminalOpen(true)}
+                  />
                 </div>
               </div>
             </div>
-
-            <VirtualTerminal history={terminalHistory} onExecute={handleExecuteCommand} />
           </div>
 
           <DocumentationPanel value={documentation} onChange={setDocumentation} />
@@ -274,6 +278,18 @@ const Index = () => {
       </div>
 
       <Taskbar />
+
+      {isTerminalOpen && (
+        <div className="fixed inset-0 z-40 pointer-events-none flex items-start justify-center p-4 sm:p-8">
+          <div className="pointer-events-auto w-full max-w-3xl">
+            <VirtualTerminal
+              history={terminalHistory}
+              onExecute={handleExecuteCommand}
+              onClose={() => setIsTerminalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {isNetworkConfigOpen && (
         <NetworkConfig

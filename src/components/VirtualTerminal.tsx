@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface VirtualTerminalProps {
   history: string[];
   onExecute: (command: string) => void;
+  onClose?: () => void;
+  className?: string;
 }
 
-export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) => {
+export const VirtualTerminal = ({ history, onExecute, onClose, className }: VirtualTerminalProps) => {
   const [command, setCommand] = useState("");
   const [isPromptFocused, setIsPromptFocused] = useState(false);
   const scrollTargetRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +41,13 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
 
     focusInput();
   }, [history, focusInput]);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (node) {
+      node.focus();
+    }
+  }, []);
 
   useEffect(() => {
     const containerNode = containerRef.current;
@@ -97,7 +107,14 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
   return (
     <div
       ref={containerRef}
-      className="win-window h-full flex flex-col focus-within:ring-2 focus-within:ring-[hsl(var(--secondary))]"
+      className={cn(
+        "win-window flex flex-col focus-within:ring-2 focus-within:ring-[hsl(var(--secondary))]",
+        "max-h-[80vh]",
+        "min-h-[320px]",
+        "sm:min-h-[380px]",
+        "lg:min-h-[440px]",
+        className
+      )}
       onMouseDown={handleContainerPointerDown}
       onTouchStart={handleContainerPointerDown}
       tabIndex={0}
@@ -108,8 +125,18 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
       role="group"
       aria-label="虚拟命令提示符"
     >
-      <div className="win-titlebar">
+      <div className="win-titlebar flex items-center justify-between gap-3">
         <span className="text-sm font-semibold">命令提示符</span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-6 h-5 bg-red-500 hover:bg-red-600 border border-white/50 flex items-center justify-center"
+            aria-label="关闭命令提示符"
+          >
+            <span className="text-white text-sm leading-none">×</span>
+          </button>
+        )}
       </div>
       <div className="flex-1 bg-black text-green-300 font-mono text-sm p-3 overflow-y-auto">
         <div className="space-y-2">
