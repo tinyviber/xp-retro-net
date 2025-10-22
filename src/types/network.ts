@@ -5,6 +5,10 @@ export interface NetworkSettings {
   dns: string;
 }
 
+export interface RouterSettings {
+  dhcpEnabled: boolean;
+}
+
 export interface ExerciseDefinition {
   id: number;
   title: string;
@@ -13,4 +17,5 @@ export interface ExerciseDefinition {
   objectives: string[];
   hints: string[];
   initialNetwork: NetworkSettings;
+  initialRouter: RouterSettings;
 }

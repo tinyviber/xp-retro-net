@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Monitor, Network, Folder, FileText } from "lucide-react";
+import { Monitor, Network, Folder, FileText, Router } from "lucide-react";
 import { DesktopIcon } from "@/components/DesktopIcon";
 import { NetworkConfig } from "@/components/NetworkConfig";
+import { RouterConfig } from "@/components/RouterConfig";
 import { Taskbar } from "@/components/Taskbar";
 import { ProblemDescription } from "@/components/ProblemDescription";
 import { DocumentationPanel } from "@/components/DocumentationPanel";
 import { VirtualTerminal } from "@/components/VirtualTerminal";
 import { exercises } from "@/data/exercises";
 import { executeVirtualCommand } from "@/lib/virtualCommands";
-import { NetworkSettings } from "@/types/network";
+import { NetworkSettings, RouterSettings } from "@/types/network";
 
 const Index = () => {
   const [activeExerciseId, setActiveExerciseId] = useState(exercises[0].id);
@@ -21,12 +22,16 @@ const Index = () => {
   const [terminalHistory, setTerminalHistory] = useState<string[]>([]);
   const [documentation, setDocumentation] = useState("");
   const [isNetworkConfigOpen, setIsNetworkConfigOpen] = useState(false);
+  const [routerSettings, setRouterSettings] = useState<RouterSettings>({ ...activeExercise.initialRouter });
+  const [isRouterConfigOpen, setIsRouterConfigOpen] = useState(false);
 
   useEffect(() => {
     setNetworkConfig({ ...activeExercise.initialNetwork });
     setTerminalHistory([]);
     setDocumentation("");
     setIsNetworkConfigOpen(false);
+    setRouterSettings({ ...activeExercise.initialRouter });
+    setIsRouterConfigOpen(false);
   }, [activeExercise]);
 
   const handleExecuteCommand = (command: string) => {
@@ -44,6 +49,11 @@ const Index = () => {
   const handleApplyNetworkConfig = (settings: NetworkSettings) => {
     setNetworkConfig({ ...settings });
     setTerminalHistory((previous) => [...previous, "系统: 网络配置已更新。"]);
+  };
+
+  const handleApplyRouterConfig = (settings: RouterSettings) => {
+    setRouterSettings({ ...settings });
+    setTerminalHistory((previous) => [...previous, "系统: 路由器配置已更新。"]);
   };
 
   return (
@@ -91,6 +101,11 @@ const Index = () => {
                     label="网络"
                     onDoubleClick={() => setIsNetworkConfigOpen(true)}
                   />
+                  <DesktopIcon
+                    icon={<Router className="text-green-500" />}
+                    label="路由器"
+                    onDoubleClick={() => setIsRouterConfigOpen(true)}
+                  />
                   <DesktopIcon icon={<Folder className="text-yellow-500" />} label="我的文档" />
                   <DesktopIcon icon={<FileText className="text-white" />} label="回收站" />
                 </div>
@@ -111,6 +126,14 @@ const Index = () => {
           initialSettings={networkConfig}
           onApply={handleApplyNetworkConfig}
           onClose={() => setIsNetworkConfigOpen(false)}
+        />
+      )}
+
+      {isRouterConfigOpen && (
+        <RouterConfig
+          initialSettings={routerSettings}
+          onApply={handleApplyRouterConfig}
+          onClose={() => setIsRouterConfigOpen(false)}
         />
       )}
     </div>

@@ -23,6 +23,9 @@ export const exercises: ExerciseDefinition[] = [
       gateway: "",
       dns: "",
     },
+    initialRouter: {
+      dhcpEnabled: false,
+    },
   },
   {
     id: 2,
@@ -46,6 +49,9 @@ export const exercises: ExerciseDefinition[] = [
       gateway: "",
       dns: "8.8.8.8",
     },
+    initialRouter: {
+      dhcpEnabled: true,
+    },
   },
   {
     id: 3,
@@ -68,6 +74,9 @@ export const exercises: ExerciseDefinition[] = [
       subnetMask: "255.255.255.0",
       gateway: "192.168.1.1",
       dns: "123.123.123.123",
+    },
+    initialRouter: {
+      dhcpEnabled: true,
     },
   },
 ];
