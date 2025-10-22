@@ -6,6 +6,8 @@ interface NetworkConfigProps {
 }
 
 export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
+  const [ipMode, setIpMode] = useState<"auto" | "manual">("manual");
+  const [dnsMode, setDnsMode] = useState<"auto" | "manual">("manual");
   const [ipAddress, setIpAddress] = useState("192.168.1.100");
   const [subnetMask, setSubnetMask] = useState("255.255.255.0");
   const [gateway, setGateway] = useState("192.168.1.1");
@@ -34,6 +36,8 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 type="radio"
                 id="auto"
                 name="ipMode"
+                checked={ipMode === "auto"}
+                onChange={() => setIpMode("auto")}
                 className="w-4 h-4"
               />
               <label htmlFor="auto" className="text-sm">自动获得 IP 地址</label>
@@ -44,7 +48,8 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 type="radio"
                 id="manual"
                 name="ipMode"
-                defaultChecked
+                checked={ipMode === "manual"}
+                onChange={() => setIpMode("manual")}
                 className="w-4 h-4"
               />
               <label htmlFor="manual" className="text-sm">使用下面的 IP 地址:</label>
@@ -55,9 +60,10 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 <label className="text-sm w-32">IP 地址:</label>
                 <input
                   type="text"
-                  value={ipAddress}
+                  value={ipMode === "auto" ? "" : ipAddress}
                   onChange={(e) => setIpAddress(e.target.value)}
-                  className="win-input flex-1"
+                  disabled={ipMode === "auto"}
+                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
                 />
               </div>
               
@@ -65,9 +71,10 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 <label className="text-sm w-32">子网掩码:</label>
                 <input
                   type="text"
-                  value={subnetMask}
+                  value={ipMode === "auto" ? "" : subnetMask}
                   onChange={(e) => setSubnetMask(e.target.value)}
-                  className="win-input flex-1"
+                  disabled={ipMode === "auto"}
+                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
                 />
               </div>
               
@@ -75,9 +82,10 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 <label className="text-sm w-32">默认网关:</label>
                 <input
                   type="text"
-                  value={gateway}
+                  value={ipMode === "auto" ? "" : gateway}
                   onChange={(e) => setGateway(e.target.value)}
-                  className="win-input flex-1"
+                  disabled={ipMode === "auto"}
+                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -87,6 +95,8 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 type="radio"
                 id="autoDns"
                 name="dnsMode"
+                checked={dnsMode === "auto"}
+                onChange={() => setDnsMode("auto")}
                 className="w-4 h-4"
               />
               <label htmlFor="autoDns" className="text-sm">自动获得 DNS 服务器地址</label>
@@ -97,7 +107,8 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 type="radio"
                 id="manualDns"
                 name="dnsMode"
-                defaultChecked
+                checked={dnsMode === "manual"}
+                onChange={() => setDnsMode("manual")}
                 className="w-4 h-4"
               />
               <label htmlFor="manualDns" className="text-sm">使用下面的 DNS 服务器地址:</label>
@@ -108,9 +119,10 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 <label className="text-sm w-32">首选 DNS 服务器:</label>
                 <input
                   type="text"
-                  value={preferredDns}
+                  value={dnsMode === "auto" ? "" : preferredDns}
                   onChange={(e) => setPreferredDns(e.target.value)}
-                  className="win-input flex-1"
+                  disabled={dnsMode === "auto"}
+                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
                 />
               </div>
               
@@ -118,9 +130,10 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                 <label className="text-sm w-32">备用 DNS 服务器:</label>
                 <input
                   type="text"
-                  value={alternateDns}
+                  value={dnsMode === "auto" ? "" : alternateDns}
                   onChange={(e) => setAlternateDns(e.target.value)}
-                  className="win-input flex-1"
+                  disabled={dnsMode === "auto"}
+                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
                 />
               </div>
             </div>
