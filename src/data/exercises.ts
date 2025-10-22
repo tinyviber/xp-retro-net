@@ -31,7 +31,6 @@ export const exercises: ExerciseDefinition[] = [
     hints: [
       "APIPA 地址段 (169.254.x.x) 只能在本地自组织网络通信，无法访问网关。",
       "可以直接切换到手动 IP，也可以先尝试开启路由器 DHCP。",
-      "DNS 可使用 114.114.114.114 或 223.5.5.5。",
     ],
     initialNetwork: {
       ipAddress: "169.254.45.12",
@@ -123,7 +122,6 @@ export const exercises: ExerciseDefinition[] = [
     ],
     hints: [
       "DNS 地址必须是合法 IPv4，例如 114.114.114.114。",
-      "如果课堂演示，可让学生对比 ping IP 与 ping 域名的差异。",
       "也可以临时改用 223.5.5.5 来验证。",
     ],
     initialNetwork: {
@@ -173,9 +171,7 @@ export const exercises: ExerciseDefinition[] = [
       "重新执行 ping baidu.com，确认解析与连通恢复。",
     ],
     verificationSteps: [
-      "运行 ipconfig，确保 DNS 已变为合法服务器地址。",
-      "使用 ping 192.168.1.1 与 ping 114.114.114.114 验证网络连通。",
-      "最后执行 ping baidu.com 检查域名解析是否恢复。",
+      "执行 ping baidu.com 检查域名解析是否恢复。",
     ],
     takeaways: [
       "能 ping 通 IP 却解析不了域名时应优先检查 DNS。",
