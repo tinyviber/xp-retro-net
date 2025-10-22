@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import { Network, Router, Terminal } from "lucide-react";
 import { DesktopIcon } from "@/components/DesktopIcon";
@@ -27,6 +27,46 @@ const numberToIp = (value: number) =>
   [24, 16, 8, 0]
     .map((shift) => ((value >> shift) & 255).toString())
     .join(".");
+
+const IPV4_REGEX =
+  /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+
+const inSameSubnet = (ipA: string, ipB: string, mask: string) => {
+  if (![ipA, ipB, mask].every((value) => IPV4_REGEX.test(value))) {
+    return false;
+  }
+
+  const maskInt = ipToNumber(mask);
+  return (ipToNumber(ipA) & maskInt) === (ipToNumber(ipB) & maskInt);
+};
+
+const hasResolvedExerciseOne = (
+  network: NetworkSettings,
+  router: RouterSettings
+) => {
+  if (!IPV4_REGEX.test(network.ipAddress) || network.ipAddress.startsWith("169.254.")) {
+    return false;
+  }
+
+  if (!IPV4_REGEX.test(network.gateway) || network.gateway !== router.lanGateway) {
+    return false;
+  }
+
+  if (!IPV4_REGEX.test(network.subnetMask) || network.subnetMask !== router.lanSubnetMask) {
+    return false;
+  }
+
+  if (!network.dns || !IPV4_REGEX.test(network.dns)) {
+    return false;
+  }
+
+  if (!inSameSubnet(network.ipAddress, router.lanGateway, router.lanSubnetMask)) {
+    return false;
+  }
+
+  const lastOctet = Number(network.ipAddress.split(".")[3] ?? "-1");
+  return lastOctet > 0 && lastOctet < 255;
+};
 
 const createDhcpLease = (
   settings: RouterSettings,
@@ -117,6 +157,7 @@ const Index = () => {
   const [routerSettings, setRouterSettings] = useState<RouterSettings>({ ...activeExercise.initialRouter });
   const [isRouterConfigOpen, setIsRouterConfigOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [dhcpLease, setDhcpLease] = useState<NetworkSettings | null>(() => {
     const initialAdapter = createInitialAdapterConfig(activeExercise);
     if (initialAdapter.ipMode === "auto" && activeExercise.initialRouter.dhcpEnabled) {
@@ -124,6 +165,18 @@ const Index = () => {
     }
     return null;
   });
+  const successTooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showSuccessTooltip = useCallback((message: string) => {
+    setSuccessMessage(message);
+    if (successTooltipTimerRef.current) {
+      clearTimeout(successTooltipTimerRef.current);
+    }
+    successTooltipTimerRef.current = setTimeout(() => {
+      setSuccessMessage(null);
+      successTooltipTimerRef.current = null;
+    }, 4000);
+  }, []);
 
   useEffect(() => {
     const nextAdapter = createInitialAdapterConfig(activeExercise);
@@ -132,12 +185,25 @@ const Index = () => {
     setIsNetworkConfigOpen(false);
     setRouterSettings({ ...activeExercise.initialRouter });
     setIsRouterConfigOpen(false);
+    if (successTooltipTimerRef.current) {
+      clearTimeout(successTooltipTimerRef.current);
+      successTooltipTimerRef.current = null;
+    }
+    setSuccessMessage(null);
     setDhcpLease(
       activeExercise.initialRouter.dhcpEnabled && nextAdapter.ipMode === "auto"
         ? createDhcpLease(activeExercise.initialRouter, activeExercise)
         : null
     );
   }, [activeExercise]);
+
+  useEffect(() => {
+    return () => {
+      if (successTooltipTimerRef.current) {
+        clearTimeout(successTooltipTimerRef.current);
+      }
+    };
+  }, []);
 
   const effectiveNetwork = useMemo<NetworkSettings>(() => {
     if (adapterConfig.ipMode === "manual") {
@@ -227,15 +293,31 @@ const Index = () => {
   ]);
 
   const handleExecuteCommand = (command: string) => {
-    const output = executeVirtualCommand(command, effectiveNetwork, activeExercise, routerSettings);
+    const trimmed = command.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const [rawCommand] = trimmed.split(/\s+/);
+    const normalized = rawCommand.toLowerCase();
+
+    const output = executeVirtualCommand(trimmed, effectiveNetwork, activeExercise, routerSettings);
 
     setTerminalHistory((previous) => {
-      const next = [...previous, `C:\\> ${command}`];
+      const next = [...previous, `C:\\> ${trimmed}`];
       if (output) {
         next.push(output);
       }
       return next;
     });
+
+    if (
+      normalized === "ipconfig" &&
+      activeExercise.id === 1 &&
+      hasResolvedExerciseOne(effectiveNetwork, routerSettings)
+    ) {
+      showSuccessTooltip("恭喜你成功解决问题！");
+    }
   };
 
   const handleApplyNetworkConfig = (settings: NetworkAdapterConfig) => {
@@ -336,6 +418,17 @@ const Index = () => {
       </div>
 
       <Taskbar />
+
+      {successMessage && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div
+            role="status"
+            className="win-window border-2 border-[hsl(var(--secondary))] bg-[hsl(var(--win-panel))] px-4 py-3 text-sm font-medium text-black shadow-lg"
+          >
+            {successMessage}
+          </div>
+        </div>
+      )}
 
       {isTerminalOpen && (
         <div className="fixed inset-0 z-40 pointer-events-none flex items-start justify-center p-4 sm:p-8">

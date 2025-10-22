@@ -19,10 +19,10 @@ const createDomainMap = (domains: (keyof typeof DOMAIN_IPS)[]) =>
 export const exercises: ExerciseDefinition[] = [
   {
     id: 1,
-    title: "练习 1｜DHCP 关闭导致 APIPA",
-    summary: "模拟 DHCP 失效时主机落入 169.254.x.x 地址段的典型故障，要求学员手动恢复可用网络。",
+    title: "练习 1｜网页完全打不开",
+    summary: "模拟电脑在局域网中彻底失联的场景，要求学员判读地址信息并恢复正常访问。",
     scenario:
-      "小明的电脑突然打不开任何网页。老师发现多台电脑都拿到了 169.254.x.x 地址，研判为 DHCP 服务不可用。",
+      "小明的电脑突然打不开任何网页。老师发现多台电脑都拿到了 169.254.x.x 地址，需要你找出原因并恢复网络。",
     objectives: [
       "识别 APIPA 地址与正常网段的差异。",
       "根据给定网段手动填写 IP、掩码、网关与 DNS。",
@@ -107,10 +107,10 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 2,
-    title: "练习 2｜DNS 配置错误",
-    summary: "电脑能够访问网关与外网 IP，但由于 DNS 手工填写错误，域名解析失败。",
+    title: "练习 2｜域名访问异常",
+    summary: "模拟只能访问 IP 而无法通过域名上网的情境，引导学生通过配置核对定位问题。",
     scenario:
-      "用户反馈“能打游戏但打不开网页”。排查发现电脑手动写了无效的 DNS 地址 1.1.1.300。",
+      "用户反馈“能打游戏但打不开网页”。需要你结合工具确认当前配置，并恢复正常的域名访问。",
     objectives: [
       "读取 ipconfig 输出，核对当前 DNS。",
       "将 DNS 改回自动或使用可用的公共 DNS。",
@@ -193,10 +193,10 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 3,
-    title: "练习 3｜网关配置错误",
-    summary: "电脑写错了默认网关，导致无法访问外部网络。",
+    title: "练习 3｜内网正常外网失败",
+    summary: "模拟电脑能访问局域网资源却出不了网的情境，训练对默认路由的排查方法。",
     scenario:
-      "新入职同事手动配置静态 IP 后能访问局域网共享，却无法访问互联网，怀疑默认网关填写错误。",
+      "新入职同事手动配置静态 IP 后能访问局域网共享，却无法访问互联网，需要你确认配置并排除故障。",
     objectives: [
       "通过 ipconfig 判断默认网关是否正确。",
       "修正网关地址后再次测试连通。",
@@ -275,8 +275,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 4,
-    title: "练习 4｜子网掩码配置错误",
-    summary: "主机表面看似在同一网段，但子网掩码不一致导致与网关通信异常。",
+    title: "练习 4｜网关莫名不通",
+    summary: "模拟 IP 地址表面正确却无法稳定访问网关的情况，帮助学生练习子网划分排查。",
     scenario:
       "电脑手工配置 IP 后，子网掩码被误填为 255.255.0.0，导致 ARP 请求异常，与网关不通。",
     objectives: [
@@ -358,8 +358,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 5,
-    title: "练习 5｜DHCP 地址池耗尽",
-    summary: "新设备接入后自动获取失败，需要扩大 DHCP 池或改为静态地址。",
+    title: "练习 5｜新设备无法上线",
+    summary: "模拟新设备自动获取不到地址的状况，要求学员诊断租约问题并让电脑重新入网。",
     scenario:
       "实验室路由器地址池仅 192.168.1.2-192.168.1.5，新增电脑无法自动获取地址，老设备仍可上网。",
     objectives: [
@@ -445,8 +445,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 6,
-    title: "练习 6｜静态 IP 冲突",
-    summary: "两台电脑写成相同静态 IP，导致互相掉线与冲突提示。",
+    title: "练习 6｜网络时断时续",
+    summary: "模拟电脑偶发掉线并提示冲突的情况，训练学生识别地址占用问题。",
     scenario:
       "电脑 A 与电脑 B 都手动写成 192.168.1.50，网络时断时续并提示 IP 冲突，需要更换地址。",
     objectives: [
@@ -528,8 +528,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 7,
-    title: "练习 7｜路由器 DNS 配置错误",
-    summary: "路由器上游 DNS 写错导致全网域名解析失败，需在路由器修复或本机覆盖。",
+    title: "练习 7｜全班打不开域名",
+    summary: "模拟整个局域网都无法访问域名的状况，锻炼学生排查集中式服务配置的能力。",
     scenario:
       "校园网路由器的上游 DNS 被误写成 203.0.113.123，全班同学都无法打开域名，只能 ping 通外网 IP。",
     objectives: [
@@ -614,10 +614,10 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 8,
-    title: "练习 8｜路由器 WAN 断网",
-    summary: "路由器 WAN 口未上线，导致只能访问内网，无法访问外网。",
+    title: "练习 8｜外网整站不可达",
+    summary: "模拟局域网一切正常却访问不了公网的状况，引导学生判定问题位于上游链路。",
     scenario:
-      "网关可以 ping 通，DNS 也看似正确，但 ping 外网 IP 仍然超时，怀疑路由器 WAN 口未接入。",
+      "网关可以 ping 通，DNS 也看似正确，但 ping 外网 IP 仍然超时，需要确认路由器的上联状态。",
     objectives: [
       "区分内网故障与外网故障。",
       "通过路由器状态页确认 WAN 是否断开。",
@@ -700,8 +700,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 9,
-    title: "练习 9｜LAN 网段调整后 DHCP 未同步",
-    summary: "路由器 LAN 改为 192.168.10.1，但 DHCP 仍发 192.168.1.x，导致主机拿到错误网段。",
+    title: "练习 9｜换网段后的混乱",
+    summary: "模拟更换局域网网段后客户端仍保留旧配置的情境，考察学生同步参数的意识。",
     scenario:
       "老师把路由器 LAN 改到 192.168.10.1/24，却忘了改 DHCP，学生电脑拿到 192.168.1.101，无法访问网关。",
     objectives: [
@@ -782,8 +782,8 @@ export const exercises: ExerciseDefinition[] = [
   },
   {
     id: 10,
-    title: "练习 10｜跨网段静态配置错误",
-    summary: "路由器 LAN 改到 10.0.0.1/24，但电脑仍写 192.168.1.88，导致与网关不在同一网段。",
+    title: "练习 10｜电脑和路由器不在一个网段",
+    summary: "模拟路由器与电脑网段完全不匹配的情况，引导学生快速校准地址方案。",
     scenario:
       "升级网络后路由器改为 10.0.0.1，学生电脑依旧保留旧的 192.168.1.88，怎么都 ping 不通网关。",
     objectives: [
