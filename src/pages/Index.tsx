@@ -9,7 +9,69 @@ import { DocumentationPanel } from "@/components/DocumentationPanel";
 import { VirtualTerminal } from "@/components/VirtualTerminal";
 import { exercises } from "@/data/exercises";
 import { executeVirtualCommand } from "@/lib/virtualCommands";
-import { NetworkSettings, RouterSettings } from "@/types/network";
+import {
+  ExerciseDefinition,
+  NetworkAdapterConfig,
+  NetworkSettings,
+  RouterSettings,
+} from "@/types/network";
+
+const ipToNumber = (ip: string) =>
+  ip
+    .split(".")
+    .map(Number)
+    .reduce((acc, part) => (acc << 8) + part, 0);
+
+const numberToIp = (value: number) =>
+  [24, 16, 8, 0]
+    .map((shift) => ((value >> shift) & 255).toString())
+    .join(".");
+
+const createDhcpLease = (settings: RouterSettings): NetworkSettings => {
+  const startInt = ipToNumber(settings.dhcpRangeStart);
+  const endInt = ipToNumber(settings.dhcpRangeEnd);
+  const leaseInt = startInt <= endInt ? startInt : endInt;
+
+  return {
+    ipAddress: numberToIp(leaseInt),
+    subnetMask: settings.lanSubnetMask,
+    gateway: settings.lanGateway,
+    dns: settings.dhcpDns,
+  };
+};
+
+const createApipaFallback = (
+  exercise: ExerciseDefinition
+): NetworkSettings => {
+  const { initialNetwork, id } = exercise;
+
+  if (initialNetwork.ipAddress.startsWith("169.254.")) {
+    return {
+      ipAddress: initialNetwork.ipAddress,
+      subnetMask: initialNetwork.subnetMask || "255.255.0.0",
+      gateway: "",
+      dns: "",
+    };
+  }
+
+  const thirdOctet = 100 + (id % 100);
+  const fourthOctet = 10 + ((id * 17) % 200);
+
+  return {
+    ipAddress: `169.254.${thirdOctet}.${fourthOctet}`,
+    subnetMask: "255.255.0.0",
+    gateway: "",
+    dns: "",
+  };
+};
+
+const createInitialAdapterConfig = (
+  exercise: ExerciseDefinition
+): NetworkAdapterConfig => ({
+  ...exercise.initialNetwork,
+  ipMode: exercise.initialNetwork.ipAddress ? "manual" : "auto",
+  dnsMode: exercise.initialNetwork.dns ? "manual" : "auto",
+});
 
 const Index = () => {
   const [activeExerciseId, setActiveExerciseId] = useState(exercises[0].id);
@@ -18,24 +80,116 @@ const Index = () => {
     [activeExerciseId]
   );
 
-  const [networkConfig, setNetworkConfig] = useState<NetworkSettings>({ ...activeExercise.initialNetwork });
+  const [adapterConfig, setAdapterConfig] = useState<NetworkAdapterConfig>(() =>
+    createInitialAdapterConfig(activeExercise)
+  );
   const [terminalHistory, setTerminalHistory] = useState<string[]>([]);
   const [documentation, setDocumentation] = useState("");
   const [isNetworkConfigOpen, setIsNetworkConfigOpen] = useState(false);
   const [routerSettings, setRouterSettings] = useState<RouterSettings>({ ...activeExercise.initialRouter });
   const [isRouterConfigOpen, setIsRouterConfigOpen] = useState(false);
+  const [dhcpLease, setDhcpLease] = useState<NetworkSettings | null>(() => {
+    const initialAdapter = createInitialAdapterConfig(activeExercise);
+    if (initialAdapter.ipMode === "auto" && activeExercise.initialRouter.dhcpEnabled) {
+      return createDhcpLease(activeExercise.initialRouter);
+    }
+    return null;
+  });
 
   useEffect(() => {
-    setNetworkConfig({ ...activeExercise.initialNetwork });
+    const nextAdapter = createInitialAdapterConfig(activeExercise);
+    setAdapterConfig(nextAdapter);
     setTerminalHistory([]);
     setDocumentation("");
     setIsNetworkConfigOpen(false);
     setRouterSettings({ ...activeExercise.initialRouter });
     setIsRouterConfigOpen(false);
+    setDhcpLease(
+      activeExercise.initialRouter.dhcpEnabled && nextAdapter.ipMode === "auto"
+        ? createDhcpLease(activeExercise.initialRouter)
+        : null
+    );
   }, [activeExercise]);
 
+  const effectiveNetwork = useMemo<NetworkSettings>(() => {
+    if (adapterConfig.ipMode === "manual") {
+      const dns =
+        adapterConfig.dnsMode === "manual"
+          ? adapterConfig.dns
+          : routerSettings.dhcpEnabled
+          ? routerSettings.dhcpDns
+          : "";
+
+      return {
+        ipAddress: adapterConfig.ipAddress,
+        subnetMask: adapterConfig.subnetMask,
+        gateway: adapterConfig.gateway,
+        dns,
+      };
+    }
+
+    if (routerSettings.dhcpEnabled) {
+      const lease = dhcpLease ?? createDhcpLease(routerSettings);
+      const dns = adapterConfig.dnsMode === "manual" ? adapterConfig.dns : lease.dns;
+
+      return {
+        ipAddress: lease.ipAddress,
+        subnetMask: lease.subnetMask,
+        gateway: lease.gateway,
+        dns,
+      };
+    }
+
+    const fallback = createApipaFallback(activeExercise);
+    const dns = adapterConfig.dnsMode === "manual" ? adapterConfig.dns : fallback.dns;
+
+    return {
+      ipAddress: fallback.ipAddress,
+      subnetMask: fallback.subnetMask,
+      gateway: fallback.gateway,
+      dns,
+    };
+  }, [adapterConfig, routerSettings, dhcpLease, activeExercise]);
+
+  useEffect(() => {
+    if (adapterConfig.ipMode !== "auto" || !routerSettings.dhcpEnabled) {
+      if (dhcpLease !== null) {
+        setDhcpLease(null);
+      }
+      return;
+    }
+
+    const lease = createDhcpLease(routerSettings);
+    setDhcpLease((previous) => {
+      if (
+        previous &&
+        previous.ipAddress === lease.ipAddress &&
+        previous.subnetMask === lease.subnetMask &&
+        previous.gateway === lease.gateway &&
+        previous.dns === lease.dns
+      ) {
+        return previous;
+      }
+
+      setTerminalHistory((prev) => [
+        ...prev,
+        `系统: DHCP 已分配 IP 地址 ${lease.ipAddress}。`,
+      ]);
+      return lease;
+    });
+  }, [
+    adapterConfig.ipMode,
+    routerSettings.dhcpEnabled,
+    routerSettings.dhcpRangeStart,
+    routerSettings.dhcpRangeEnd,
+    routerSettings.lanGateway,
+    routerSettings.lanSubnetMask,
+    routerSettings.dhcpDns,
+    dhcpLease,
+  ]);
+
   const handleExecuteCommand = (command: string) => {
-    const output = executeVirtualCommand(command, networkConfig);
+    const output = executeVirtualCommand(command, effectiveNetwork);
 
     setTerminalHistory((previous) => {
       const next = [...previous, `C:\\> ${command}`];
@@ -46,8 +200,8 @@ const Index = () => {
     });
   };
 
-  const handleApplyNetworkConfig = (settings: NetworkSettings) => {
-    setNetworkConfig({ ...settings });
+  const handleApplyNetworkConfig = (settings: NetworkAdapterConfig) => {
+    setAdapterConfig({ ...settings });
     setTerminalHistory((previous) => [...previous, "系统: 网络配置已更新。"]);
   };
 
@@ -123,7 +277,7 @@ const Index = () => {
 
       {isNetworkConfigOpen && (
         <NetworkConfig
-          initialSettings={networkConfig}
+          initialSettings={adapterConfig}
           onApply={handleApplyNetworkConfig}
           onClose={() => setIsNetworkConfigOpen(false)}
         />

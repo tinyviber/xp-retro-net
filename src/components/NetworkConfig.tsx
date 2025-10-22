@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { WindowFrame } from "./WindowFrame";
-import { NetworkSettings } from "@/types/network";
+import { NetworkAdapterConfig } from "@/types/network";
 
 interface NetworkConfigProps {
-  initialSettings: NetworkSettings;
-  onApply: (settings: NetworkSettings) => void;
+  initialSettings: NetworkAdapterConfig;
+  onApply: (settings: NetworkAdapterConfig) => void;
   onClose: () => void;
 }
 
 export const NetworkConfig = ({ initialSettings, onApply, onClose }: NetworkConfigProps) => {
-  const [ipMode, setIpMode] = useState<"auto" | "manual">("manual");
-  const [dnsMode, setDnsMode] = useState<"auto" | "manual">("manual");
+  const [ipMode, setIpMode] = useState<"auto" | "manual">(initialSettings.ipMode);
+  const [dnsMode, setDnsMode] = useState<"auto" | "manual">(initialSettings.dnsMode);
   const [ipAddress, setIpAddress] = useState(initialSettings.ipAddress);
   const [subnetMask, setSubnetMask] = useState(initialSettings.subnetMask);
   const [gateway, setGateway] = useState(initialSettings.gateway);
@@ -22,16 +22,18 @@ export const NetworkConfig = ({ initialSettings, onApply, onClose }: NetworkConf
     setGateway(initialSettings.gateway);
     setDns(initialSettings.dns);
 
-    setIpMode(initialSettings.ipAddress ? "manual" : "auto");
-    setDnsMode(initialSettings.dns ? "manual" : "auto");
+    setIpMode(initialSettings.ipMode);
+    setDnsMode(initialSettings.dnsMode);
   }, [initialSettings]);
 
   const handleApply = () => {
     onApply({
-      ipAddress: ipMode === "auto" ? "" : ipAddress,
-      subnetMask: ipMode === "auto" ? "" : subnetMask,
-      gateway: ipMode === "auto" ? "" : gateway,
-      dns: dnsMode === "auto" ? "" : dns,
+      ipMode,
+      dnsMode,
+      ipAddress,
+      subnetMask,
+      gateway,
+      dns,
     });
     onClose();
   };

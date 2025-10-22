@@ -25,6 +25,11 @@ export const exercises: ExerciseDefinition[] = [
     },
     initialRouter: {
       dhcpEnabled: false,
+      lanGateway: "192.168.1.1",
+      lanSubnetMask: "255.255.255.0",
+      dhcpRangeStart: "192.168.1.100",
+      dhcpRangeEnd: "192.168.1.150",
+      dhcpDns: "192.168.1.1",
     },
   },
   {
@@ -51,6 +56,11 @@ export const exercises: ExerciseDefinition[] = [
     },
     initialRouter: {
       dhcpEnabled: true,
+      lanGateway: "192.168.1.1",
+      lanSubnetMask: "255.255.255.0",
+      dhcpRangeStart: "192.168.1.100",
+      dhcpRangeEnd: "192.168.1.150",
+      dhcpDns: "192.168.1.1",
     },
   },
   {
@@ -77,6 +87,11 @@ export const exercises: ExerciseDefinition[] = [
     },
     initialRouter: {
       dhcpEnabled: true,
+      lanGateway: "192.168.1.1",
+      lanSubnetMask: "255.255.255.0",
+      dhcpRangeStart: "192.168.1.100",
+      dhcpRangeEnd: "192.168.1.150",
+      dhcpDns: "192.168.1.1",
     },
   },
 ];

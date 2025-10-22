@@ -16,7 +16,7 @@ export const RouterConfig = ({ initialSettings, onApply, onClose }: RouterConfig
   }, [initialSettings]);
 
   const handleApply = () => {
-    onApply({ dhcpEnabled });
+    onApply({ ...initialSettings, dhcpEnabled });
     onClose();
   };
 
