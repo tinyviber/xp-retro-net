@@ -54,6 +54,7 @@ export interface ExerciseDefinition {
   allowedActions: string[];
   symptoms: string[];
   resolution: string[];
+  verificationSteps: string[];
   takeaways: string[];
   pingTargets: PingTarget[];
   domainMap: Record<string, string>;

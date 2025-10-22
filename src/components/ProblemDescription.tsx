@@ -76,6 +76,15 @@ export const ProblemDescription = ({ exercise }: ProblemDescriptionProps) => {
       </section>
 
       <section>
+        <h3 className="font-semibold text-[13px] mb-1">验证方法</h3>
+        <ol className="list-decimal ml-5 space-y-1">
+          {exercise.verificationSteps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </section>
+
+      <section>
         <h3 className="font-semibold text-[13px] mb-1">可用 Ping 目标</h3>
         <ul className="list-disc ml-5 space-y-1">
           {exercise.pingTargets.map((target) => (

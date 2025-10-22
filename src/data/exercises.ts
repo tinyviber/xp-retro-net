@@ -20,7 +20,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 1,
     title: "练习 1｜网页完全打不开",
-    summary: "模拟电脑在局域网中彻底失联的场景，要求学员判读地址信息并恢复正常访问。",
+    summary: "小明的电脑突然打不开任何网页。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "小明的电脑突然打不开任何网页。老师发现多台电脑都拿到了 169.254.x.x 地址，需要你找出原因并恢复网络。",
     objectives: [
@@ -81,6 +81,11 @@ export const exercises: ExerciseDefinition[] = [
       "在路由器开启 DHCP 或手动设置 192.168.1.10 / 255.255.255.0 / 192.168.1.1。",
       "填写 DNS（114.114.114.114），依次 ping 网关和外网确认恢复。",
     ],
+    verificationSteps: [
+      "执行 ipconfig，确认已获得 192.168.1.x 地址且网关为 192.168.1.1。",
+      "使用 ping 192.168.1.1 验证局域网连通性。",
+      "再使用 ping 114.114.114.114 和 ping baidu.com 确认外网与域名访问恢复。",
+    ],
     takeaways: [
       "169.254.*.* 出现意味着主机没有从 DHCP 成功获取地址。",
       "手动配置时需要成套填写 IP、掩码、网关与 DNS。",
@@ -108,7 +113,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 2,
     title: "练习 2｜域名访问异常",
-    summary: "模拟只能访问 IP 而无法通过域名上网的情境，引导学生通过配置核对定位问题。",
+    summary: "用户反馈“能打游戏但打不开网页”。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "用户反馈“能打游戏但打不开网页”。需要你结合工具确认当前配置，并恢复正常的域名访问。",
     objectives: [
@@ -155,7 +160,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "在网卡中改为自动获取 DNS",
       "或手动填入 114.114.114.114 / 223.5.5.5",
-      "使用 ping 验证域名与 IP 的区别",
+      "在终端使用 ipconfig、ping 观察配置与连通差异",
     ],
     symptoms: [
       "ipconfig 显示 DNS 为 1.1.1.300",
@@ -166,6 +171,11 @@ export const exercises: ExerciseDefinition[] = [
       "通过 ipconfig 记录当前有效 IP 与错误 DNS。",
       "改为自动或重新填写合法 DNS。",
       "重新执行 ping baidu.com，确认解析与连通恢复。",
+    ],
+    verificationSteps: [
+      "运行 ipconfig，确保 DNS 已变为合法服务器地址。",
+      "使用 ping 192.168.1.1 与 ping 114.114.114.114 验证网络连通。",
+      "最后执行 ping baidu.com 检查域名解析是否恢复。",
     ],
     takeaways: [
       "能 ping 通 IP 却解析不了域名时应优先检查 DNS。",
@@ -194,7 +204,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 3,
     title: "练习 3｜内网正常外网失败",
-    summary: "模拟电脑能访问局域网资源却出不了网的情境，训练对默认路由的排查方法。",
+    summary: "同事反映局域网资源可用但访问互联网失败。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "新入职同事手动配置静态 IP 后能访问局域网共享，却无法访问互联网，需要你确认配置并排除故障。",
     objectives: [
@@ -237,7 +247,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "修改网关为 192.168.1.1",
       "保持 DNS 为 114.114.114.114",
-      "使用 ping 验证网关与外网",
+      "使用 ipconfig、ping 逐项确认配置与连通",
     ],
     symptoms: [
       "ping 192.168.1.1 超时或提示不可达",
@@ -248,6 +258,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认当前网关字段为 192.168.1.254。",
       "改为 192.168.1.1 后重新测试网关与公网 IP。",
       "最后 ping baidu.com 验证域名解析。",
+    ],
+    verificationSteps: [
+      "执行 ipconfig，确认默认网关已更新为 192.168.1.1。",
+      "使用 ping 192.168.1.1 验证可达性。",
+      "依次 ping 114.114.114.114 与 baidu.com，确认外网与域名访问恢复。",
     ],
     takeaways: [
       "默认网关决定是否能出网，写错会导致外网不可达。",
@@ -276,7 +291,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 4,
     title: "练习 4｜网关莫名不通",
-    summary: "模拟 IP 地址表面正确却无法稳定访问网关的情况，帮助学生练习子网划分排查。",
+    summary: "电脑手工配置后仍无法稳定访问网关。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "电脑手工配置 IP 后，子网掩码被误填为 255.255.0.0，导致 ARP 请求异常，与网关不通。",
     objectives: [
@@ -319,7 +334,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "将子网掩码改为 255.255.255.0",
       "维持其他参数不变",
-      "使用 ping 验证网关与外网",
+      "通过 ipconfig、ping 检查网段划分与连通",
     ],
     symptoms: [
       "ping 192.168.1.1 请求超时",
@@ -330,6 +345,11 @@ export const exercises: ExerciseDefinition[] = [
       "检查 ipconfig 输出的子网掩码字段。",
       "修正为 255.255.255.0 后重新测试。",
       "确认能 ping 网关、公共 IP 与域名。",
+    ],
+    verificationSteps: [
+      "执行 ipconfig，确认掩码已调整为 255.255.255.0。",
+      "使用 ping 192.168.1.1 验证网关稳定响应。",
+      "依次 ping 114.114.114.114 与 baidu.com 确认外网连通。",
     ],
     takeaways: [
       "掩码定义了网络与主机位，错误的掩码会导致寻址混乱。",
@@ -359,7 +379,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 5,
     title: "练习 5｜新设备无法上线",
-    summary: "模拟新设备自动获取不到地址的状况，要求学员诊断租约问题并让电脑重新入网。",
+    summary: "实验室新增电脑无法自动获取地址。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "实验室路由器地址池仅 192.168.1.2-192.168.1.5，新增电脑无法自动获取地址，老设备仍可上网。",
     objectives: [
@@ -418,6 +438,11 @@ export const exercises: ExerciseDefinition[] = [
       "调整路由器地址池或手动配置 192.168.1.50。",
       "重新连接后验证网关与公网。",
     ],
+    verificationSteps: [
+      "执行 ipconfig，确认已分配到 192.168.1.x 且显示正确网关。",
+      "使用 ping 192.168.1.1 测试网关响应。",
+      "使用 ping 114.114.114.114 与 ping baidu.com 验证外网与域名访问。",
+    ],
     takeaways: [
       "地址池耗尽时，新设备会拿不到有效租约。",
       "扩大地址池或采用静态保留可快速解决。",
@@ -446,7 +471,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 6,
     title: "练习 6｜网络时断时续",
-    summary: "模拟电脑偶发掉线并提示冲突的情况，训练学生识别地址占用问题。",
+    summary: "办公室电脑偶发掉线并弹出 IP 冲突提示。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "电脑 A 与电脑 B 都手动写成 192.168.1.50，网络时断时续并提示 IP 冲突，需要更换地址。",
     objectives: [
@@ -489,7 +514,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "改为自动获取 IP",
       "或手动更改为未使用的地址，如 192.168.1.60",
-      "通过 ping 网关验证是否稳定",
+      "通过 ipconfig、ping 网关验证是否稳定",
     ],
     symptoms: [
       "ping 网关或外网间歇超时",
@@ -500,6 +525,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认当前 IP 与冲突提示。",
       "改为自动或换成不冲突的地址。",
       "持续 ping 网关，确认不再丢包。",
+    ],
+    verificationSteps: [
+      "执行 ipconfig，确认当前地址已更改且无冲突提示。",
+      "持续 ping 192.168.1.1，观察是否稳定回复。",
+      "再 ping baidu.com，确认外部访问不再受影响。",
     ],
     takeaways: [
       "静态地址需规划管理，避免与他人重复。",
@@ -529,7 +559,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 7,
     title: "练习 7｜全班打不开域名",
-    summary: "模拟整个局域网都无法访问域名的状况，锻炼学生排查集中式服务配置的能力。",
+    summary: "校园网所有电脑都无法解析网站域名。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "校园网路由器的上游 DNS 被误写成 203.0.113.123，全班同学都无法打开域名，只能 ping 通外网 IP。",
     objectives: [
@@ -576,7 +606,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "在路由器将 DNS 改为 114.114.114.114",
       "或在网卡手动覆盖 DNS",
-      "通过 ping 域名验证",
+      "在终端使用 ipconfig、ping 域名进行验证",
     ],
     symptoms: [
       "ping 114.114.114.114 正常",
@@ -587,6 +617,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认本机 DNS 为 203.0.113.123。",
       "在路由器或电脑侧改为可用 DNS。",
       "重新获取租约，验证域名解析。",
+    ],
+    verificationSteps: [
+      "使用 ipconfig 查看 DNS 是否已更新为 114.114.114.114 或其他可用地址。",
+      "ping 192.168.1.1，确认内网无异常。",
+      "ping baidu.com，确保域名能够正确解析并响应。",
     ],
     takeaways: [
       "路由器 DNS 错误会影响整个局域网。",
@@ -615,7 +650,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 8,
     title: "练习 8｜外网整站不可达",
-    summary: "模拟局域网一切正常却访问不了公网的状况，引导学生判定问题位于上游链路。",
+    summary: "办公室反馈所有外网 IP 均无法 ping 通。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "网关可以 ping 通，DNS 也看似正确，但 ping 外网 IP 仍然超时，需要确认路由器的上联状态。",
     objectives: [
@@ -661,7 +696,7 @@ export const exercises: ExerciseDefinition[] = [
     },
     allowedActions: [
       "查看路由器 WAN 状态",
-      "使用 ping 区分内外网",
+      "使用 ipconfig、ping 区分内外网",
       "记录问题并建议检查外线",
     ],
     symptoms: [
@@ -673,6 +708,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认内网连通正常。",
       "查看路由器 WAN 状态，发现未连接。",
       "告知需要检查上联线路或联系运营商。",
+    ],
+    verificationSteps: [
+      "执行 ipconfig，确认主机地址配置正常。",
+      "ping 192.168.1.1，验证内网连接。",
+      "ping 114.114.114.114 与 baidu.com，确认外网仍不可达并记录现象。",
     ],
     takeaways: [
       "排查顺序：先看网关，再测外网 IP，最后看域名。",
@@ -701,7 +741,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 9,
     title: "练习 9｜换网段后的混乱",
-    summary: "模拟更换局域网网段后客户端仍保留旧配置的情境，考察学生同步参数的意识。",
+    summary: "老师更换了路由器网段后学生电脑无法访问网关。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "老师把路由器 LAN 改到 192.168.10.1/24，却忘了改 DHCP，学生电脑拿到 192.168.1.101，无法访问网关。",
     objectives: [
@@ -744,7 +784,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "在路由器同步修改 DHCP 地址池与网关",
       "或在电脑临时改为 192.168.10.x",
-      "使用 ping 验证",
+      "使用 ipconfig、ping 验证",
     ],
     symptoms: [
       "ping 192.168.10.1 不通",
@@ -755,6 +795,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认当前 IP 与路由器不在同一网段。",
       "调整 DHCP 或手动改为 192.168.10.20。",
       "恢复后再次测试网关与域名。",
+    ],
+    verificationSteps: [
+      "运行 ipconfig，确认已处于 192.168.10.x 网段并获得正确网关。",
+      "ping 192.168.10.1 验证可以进入新网段。",
+      "ping baidu.com 或 114.114.114.114，确保外网访问恢复。",
     ],
     takeaways: [
       "改网段时必须同时调整 LAN IP、掩码与 DHCP。",
@@ -783,7 +828,7 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 10,
     title: "练习 10｜电脑和路由器不在一个网段",
-    summary: "模拟路由器与电脑网段完全不匹配的情况，引导学生快速校准地址方案。",
+    summary: "升级网络后电脑仍保留旧网段导致无法访问新路由器。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
     scenario:
       "升级网络后路由器改为 10.0.0.1，学生电脑依旧保留旧的 192.168.1.88，怎么都 ping 不通网关。",
     objectives: [
@@ -826,7 +871,7 @@ export const exercises: ExerciseDefinition[] = [
     allowedActions: [
       "将电脑改为 10.0.0.10 / 255.255.255.0",
       "默认网关填 10.0.0.1，DNS 114.114.114.114",
-      "使用 ping 验证",
+      "使用 ipconfig、ping 验证",
     ],
     symptoms: [
       "ping 10.0.0.1 请求超时",
@@ -837,6 +882,11 @@ export const exercises: ExerciseDefinition[] = [
       "确认当前网段与路由器不一致。",
       "改写为 10.0.0.10 / 255.255.255.0 / 10.0.0.1。",
       "验证外网与域名恢复。",
+    ],
+    verificationSteps: [
+      "执行 ipconfig，确认地址、网关与 DNS 已切换到 10.0.0.x 网段。",
+      "ping 10.0.0.1，确保可以访问路由器。",
+      "ping 114.114.114.114 与 baidu.com，确认外网与域名正常。",
     ],
     takeaways: [
       "网关与主机必须在同一网段才能互通。",
