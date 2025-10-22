@@ -5,7 +5,6 @@ import { NetworkConfig } from "@/components/NetworkConfig";
 import { RouterConfig } from "@/components/RouterConfig";
 import { Taskbar } from "@/components/Taskbar";
 import { ProblemDescription } from "@/components/ProblemDescription";
-import { DocumentationPanel } from "@/components/DocumentationPanel";
 import { VirtualTerminal } from "@/components/VirtualTerminal";
 import { exercises } from "@/data/exercises";
 import { executeVirtualCommand } from "@/lib/virtualCommands";
@@ -84,7 +83,6 @@ const Index = () => {
     createInitialAdapterConfig(activeExercise)
   );
   const [terminalHistory, setTerminalHistory] = useState<string[]>([]);
-  const [documentation, setDocumentation] = useState("");
   const [isNetworkConfigOpen, setIsNetworkConfigOpen] = useState(false);
   const [routerSettings, setRouterSettings] = useState<RouterSettings>({ ...activeExercise.initialRouter });
   const [isRouterConfigOpen, setIsRouterConfigOpen] = useState(false);
@@ -101,7 +99,6 @@ const Index = () => {
     const nextAdapter = createInitialAdapterConfig(activeExercise);
     setAdapterConfig(nextAdapter);
     setTerminalHistory([]);
-    setDocumentation("");
     setIsNetworkConfigOpen(false);
     setRouterSettings({ ...activeExercise.initialRouter });
     setIsRouterConfigOpen(false);
@@ -180,6 +177,7 @@ const Index = () => {
     });
   }, [
     adapterConfig.ipMode,
+    routerSettings,
     routerSettings.dhcpEnabled,
     routerSettings.dhcpRangeStart,
     routerSettings.dhcpRangeEnd,
@@ -240,16 +238,16 @@ const Index = () => {
           })}
         </div>
 
-        <div className="grid lg:grid-cols-[320px_minmax(0,1fr)_320px] gap-6 auto-rows-fr">
+        <div className="grid lg:grid-cols-[320px_minmax(0,1fr)] gap-6 auto-rows-fr">
           <ProblemDescription exercise={activeExercise} />
 
-          <div className="space-y-4">
-            <div className="win-window">
+          <div className="space-y-4 h-full flex flex-col">
+            <div className="win-window flex-1 flex flex-col">
               <div className="win-titlebar">
                 <span className="text-sm font-semibold">虚拟桌面</span>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="p-6 flex-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 h-full items-start content-start">
                   <DesktopIcon icon={<Monitor className="text-blue-600" />} label="我的电脑" />
                   <DesktopIcon
                     icon={<Network className="text-blue-600" />}
@@ -272,8 +270,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          <DocumentationPanel value={documentation} onChange={setDocumentation} />
         </div>
       </div>
 
