@@ -94,4 +94,8 @@ All colors MUST be HSL.
     @apply border-2 border-t-[hsl(var(--win-button-shadow))] border-l-[hsl(var(--win-button-shadow))] 
            border-r-white border-b-white bg-input px-2 py-1 text-sm;
   }
+  
+  .win-input:disabled {
+    @apply bg-[hsl(var(--muted))] cursor-not-allowed text-[hsl(var(--muted-foreground))];
+  }
 }

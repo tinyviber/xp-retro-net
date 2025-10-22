@@ -63,7 +63,7 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                   value={ipMode === "auto" ? "" : ipAddress}
                   onChange={(e) => setIpAddress(e.target.value)}
                   disabled={ipMode === "auto"}
-                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
+                  className="win-input flex-1"
                 />
               </div>
               
@@ -74,7 +74,7 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                   value={ipMode === "auto" ? "" : subnetMask}
                   onChange={(e) => setSubnetMask(e.target.value)}
                   disabled={ipMode === "auto"}
-                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
+                  className="win-input flex-1"
                 />
               </div>
               
@@ -85,7 +85,7 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                   value={ipMode === "auto" ? "" : gateway}
                   onChange={(e) => setGateway(e.target.value)}
                   disabled={ipMode === "auto"}
-                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
+                  className="win-input flex-1"
                 />
               </div>
             </div>
@@ -122,7 +122,7 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                   value={dnsMode === "auto" ? "" : preferredDns}
                   onChange={(e) => setPreferredDns(e.target.value)}
                   disabled={dnsMode === "auto"}
-                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
+                  className="win-input flex-1"
                 />
               </div>
               
@@ -133,7 +133,7 @@ export const NetworkConfig = ({ onClose }: NetworkConfigProps) => {
                   value={dnsMode === "auto" ? "" : alternateDns}
                   onChange={(e) => setAlternateDns(e.target.value)}
                   disabled={dnsMode === "auto"}
-                  className="win-input flex-1 disabled:bg-[hsl(var(--muted))] disabled:cursor-not-allowed"
+                  className="win-input flex-1"
                 />
               </div>
             </div>
