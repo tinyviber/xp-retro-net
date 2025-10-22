@@ -7,6 +7,7 @@ interface VirtualTerminalProps {
 
 export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) => {
   const [command, setCommand] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const scrollTargetRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +78,14 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
     setCommand("");
   };
 
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
+  };
+
   const handleContainerPointerDown = (
     event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
   ) => {
@@ -87,6 +96,8 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
 
     focusInput();
   };
+
+  const showPlaceholder = history.length === 0 && command.length === 0 && !isInputFocused;
 
   return (
     <div
@@ -103,28 +114,46 @@ export const VirtualTerminal = ({ history, onExecute }: VirtualTerminalProps) =>
         <span className="text-sm font-semibold">命令提示符</span>
       </div>
       <div className="flex-1 bg-black text-green-300 font-mono text-sm p-3 overflow-y-auto space-y-2">
-        {history.length === 0 ? (
-          <div className="opacity-60">在此输入命令开始排查...</div>
-        ) : (
-          history.map((entry, index) => (
-            <pre key={`${index}-${entry}`} className="whitespace-pre-wrap leading-relaxed">
-              {entry}
-            </pre>
-          ))
-        )}
+        {history.map((entry, index) => (
+          <pre key={`${index}-${entry}`} className="whitespace-pre-wrap leading-relaxed">
+            {entry}
+          </pre>
+        ))}
+        <form onSubmit={handleSubmit} className="pt-2">
+          <div className="flex items-start gap-2">
+            <span className="text-green-300">C:\&gt;</span>
+            <div className="relative flex-1 min-h-[1.5rem]">
+              <input
+                ref={inputRef}
+                value={command}
+                onChange={(event) => setCommand(event.target.value)}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                className="absolute inset-0 h-full w-full bg-transparent text-transparent caret-transparent outline-none"
+                autoComplete="off"
+                spellCheck={false}
+                type="text"
+                aria-label="命令输入"
+              />
+              <div className="pointer-events-none flex min-h-[1.5rem] items-center">
+                <span
+                  className={`${showPlaceholder ? "text-green-300/60" : "text-green-200"} whitespace-pre-wrap break-all`}
+                >
+                  {showPlaceholder ? "在此输入命令开始排查..." : command}
+                </span>
+                {isInputFocused && (
+                  <span
+                    className={`inline-block h-4 w-[2px] bg-green-200 animate-caret ${
+                      command.length > 0 ? "ml-1" : "ml-[2px]"
+                    }`}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </form>
         <div ref={scrollTargetRef} />
       </div>
-      <form onSubmit={handleSubmit} className="flex border-t border-black bg-neutral-900">
-        <span className="px-2 py-1 font-mono text-sm text-green-300">C:\&gt;</span>
-        <input
-          ref={inputRef}
-          value={command}
-          onChange={(event) => setCommand(event.target.value)}
-          className="flex-1 bg-neutral-900 text-green-200 px-2 py-1 font-mono text-sm focus:outline-none"
-          autoComplete="off"
-          type="text"
-        />
-      </form>
     </div>
   );
 };
