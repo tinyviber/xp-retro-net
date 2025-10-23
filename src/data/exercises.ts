@@ -165,4 +165,78 @@ export const exercises: ExerciseDefinition[] = [
     domainMap: createDomainMap(["baidu.com"]),
     conflictingIp: "192.168.1.100",
   },
+  {
+    id: 5,
+    title: "练习 5｜局域网时好时坏",
+    summary: "办公电脑偶尔能访问内网但很快又断，需要检查子网掩码是否填写正确。",
+    scenario:
+      "同事反馈只能偶尔访问共享服务器，ping 默认网关 192.168.1.1 时时通时不通。检查发现电脑手动配置的子网掩码写成了 B 类格式，导致广播域错误。请修正掩码后再次测试连通性。",
+    verificationSteps: [
+      "打开网络适配器，将子网掩码改为 255.255.255.0。",
+      "执行 ping 192.168.1.1，确认网关稳定连通。",
+    ],
+    hints: [
+      "与 192.168.1.x 同网段时掩码应为 255.255.255.0。",
+      "掩码过大或过小都会造成广播域不匹配。",
+    ],
+    initialNetwork: {
+      ipAddress: "192.168.1.120",
+      subnetMask: "255.255.0.0",
+      gateway: "192.168.1.1",
+      dns: "114.114.114.114",
+    },
+    initialRouter: {
+      dhcpEnabled: true,
+      lanGateway: "192.168.1.1",
+      lanSubnetMask: "255.255.255.0",
+      dhcpRangeStart: "192.168.1.100",
+      dhcpRangeEnd: "192.168.1.200",
+      dhcpDns: "114.114.114.114",
+      wanConnected: true,
+      wanIp: "100.64.1.6",
+      wanGateway: "100.64.1.1",
+    },
+    initialModes: {
+      ip: "manual",
+      dns: "manual",
+    },
+    desktopTools: ["network", "terminal"],
+    domainMap: createDomainMap([]),
+  },
+  {
+    id: 6,
+    title: "练习 6｜外网彻底中断",
+    summary: "全公司都无法访问互联网，需要在路由器里排查 WAN 连接状态并恢复。",
+    scenario:
+      "暴风雨后所有电脑都无法访问外网，但局域网共享资源正常。登录路由器发现 WAN 口掉线，需要重新拨号/连接让 baidu.com 可以被访问。",
+    verificationSteps: [
+      "在路由器界面检查 WAN 状态并恢复连接。",
+      "执行 ping baidu.com，确认外网恢复。",
+    ],
+    hints: [
+      "WAN 状态显示未连接时，需要重新发起连接。",
+      "恢复后可以在路由器状态页看到新的公网地址。",
+    ],
+    initialNetwork: {
+      ipAddress: "192.168.1.110",
+      subnetMask: "255.255.255.0",
+      gateway: "192.168.1.1",
+      dns: "114.114.114.114",
+    },
+    initialRouter: {
+      dhcpEnabled: true,
+      lanGateway: "192.168.1.1",
+      lanSubnetMask: "255.255.255.0",
+      dhcpRangeStart: "192.168.1.100",
+      dhcpRangeEnd: "192.168.1.200",
+      dhcpDns: "114.114.114.114",
+      wanConnected: false,
+    },
+    initialModes: {
+      ip: "auto",
+      dns: "auto",
+    },
+    desktopTools: ["router", "terminal"],
+    domainMap: createDomainMap(["baidu.com"]),
+  },
 ];
