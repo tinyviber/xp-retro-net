@@ -2,12 +2,6 @@ import { ExerciseDefinition } from "@/types/network";
 
 const DOMAIN_IPS = {
   "baidu.com": "39.156.66.14",
-  "bing.com": "204.79.197.200",
-  "qq.com": "125.39.52.26",
-  "bilibili.com": "23.66.147.113",
-  "taobao.com": "140.205.94.189",
-  "jd.com": "111.13.100.91",
-  "youku.com": "203.107.50.59",
 } as const;
 
 const createDomainMap = (domains: (keyof typeof DOMAIN_IPS)[]) =>
@@ -20,21 +14,20 @@ export const exercises: ExerciseDefinition[] = [
   {
     id: 1,
     title: "练习 1｜网页完全打不开",
-    summary: "小明的电脑突然打不开任何网页。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
+    summary: "办公室电脑突然打不开任何网页，请排查当前租约并用 ipconfig 确认网络是否恢复。",
     scenario:
-      "小明的电脑突然打不开任何网页。老师发现多台电脑都拿到了 169.254.x.x 地址，需要你找出原因并恢复网络。",
-    objectives: [
-      "识别 APIPA 地址与正常网段的差异。",
-      "根据给定网段手动填写 IP、掩码、网关与 DNS。",
-      "通过 ping 验证局域网与互联网连通性。",
+      "一早到公司发现多台电脑的网页全都打不开。ipconfig 显示主机落在 169.254.x.x 的 APIPA 地址段，怀疑路由器的地址发放出现问题，需要你在面板上确认并排除。",
+    verificationSteps: [
+      "登录路由器检查并恢复正常的地址发放。",
+      "运行 ipconfig，确认主机获取到 192.168.1.x 地址以及默认网关 192.168.1.1。",
     ],
     hints: [
-      "APIPA 地址段 (169.254.x.x) 只能在本地自组织网络通信，无法访问网关。",
-      "可以直接切换到手动 IP，也可以先尝试开启路由器 DHCP。",
+      "169.254.x.x 代表主机没有拿到可用的 DHCP 租约。",
+      "恢复地址分配后再执行 ipconfig 查看更新的网络配置。",
     ],
     initialNetwork: {
-      ipAddress: "169.254.45.12",
-      subnetMask: "255.255.0.0",
+      ipAddress: "",
+      subnetMask: "",
       gateway: "",
       dns: "",
     },
@@ -53,85 +46,31 @@ export const exercises: ExerciseDefinition[] = [
       ip: "auto",
       dns: "auto",
     },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24",
-        "DHCP 已关闭，原地址池 192.168.1.100-200",
-        "WAN 正常上线，DNS 指向 114.114.114.114",
-      ],
-      computer: [
-        "网卡设置为自动获取 IPv4",
-        "当前分配到 APIPA 169.254.45.12",
-        "无网关与 DNS 信息",
-      ],
-    },
-    allowedActions: [
-      "进入路由器面板，开启或关闭 DHCP 服务",
-      "在网络适配器属性中改为静态 IP",
-      "使用 ipconfig、ping 观察现象",
-    ],
-    symptoms: [
-      "ipconfig 显示 IPv4 地址为 169.254.x.x",
-      "ping 192.168.1.1 请求超时",
-      "ping baidu.com 提示无法解析目标主机",
-    ],
-    resolution: [
-      "先在终端确认当前 IP 段与网关缺失情况。",
-      "在路由器开启 DHCP 或手动设置 192.168.1.10 / 255.255.255.0 / 192.168.1.1。",
-      "填写 DNS（114.114.114.114），依次 ping 网关和外网确认恢复。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认已获得 192.168.1.x 地址且网关为 192.168.1.1。",
-      "使用 ping 192.168.1.1 验证局域网连通性。",
-      "再使用 ping 114.114.114.114 和 ping baidu.com 确认外网与域名访问恢复。",
-    ],
-    takeaways: [
-      "169.254.*.* 出现意味着主机没有从 DHCP 成功获取地址。",
-      "手动配置时需要成套填写 IP、掩码、网关与 DNS。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "局域网默认网关",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS 服务",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "模拟外网站点",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com"]),
-    desktopTools: ["router", "network", "terminal"],
+    desktopTools: ["router", "terminal"],
+    domainMap: createDomainMap([]),
   },
   {
     id: 2,
-    title: "练习 2｜域名访问异常",
-    summary: "用户反馈“能打游戏但打不开网页”。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
+    title: "练习 2｜局域网设备连不通",
+    summary: "同事电脑无法访问局域网中的 192.168.1.5，请根据路由器提供的信息排查本机 IPv4 设置。",
     scenario:
-      "用户反馈“能打游戏但打不开网页”。需要你结合工具确认当前配置，并恢复正常的域名访问。",
-    objectives: [
-      "读取 ipconfig 输出，核对当前 DNS。",
-      "将 DNS 改回自动或使用可用的公共 DNS。",
-      "再次通过 ping 域名确认恢复解析。",
+      "路由器的 DHCP 按钮显示为灰色且无法启用，目前所有终端都处于 169.254.x.x 段。请先查看路由器的 LAN 配置信息，再在本机上手动填写 IPv4 地址、子网掩码和网关，让 ping 192.168.1.5 恢复正常。",
+    verificationSteps: [
+      "从路由器界面获取 LAN 网关及掩码信息。",
+      "在网络适配器中改为静态地址并成功 ping 通 192.168.1.5。",
     ],
     hints: [
-      "DNS 地址必须是合法 IPv4，例如 114.114.114.114。",
-      "也可以临时改用 223.5.5.5 来验证。",
+      "没有 DHCP 服务时需要手动写全 IP、掩码、网关。",
+      "本地地址应与 192.168.1.5 位于同一网段，例如 192.168.1.10。",
     ],
     initialNetwork: {
       ipAddress: "",
       subnetMask: "",
       gateway: "",
-      dns: "1.1.1.300",
+      dns: "",
     },
     initialRouter: {
-      dhcpEnabled: true,
+      dhcpEnabled: false,
       lanGateway: "192.168.1.1",
       lanSubnetMask: "255.255.255.0",
       dhcpRangeStart: "192.168.1.100",
@@ -143,84 +82,34 @@ export const exercises: ExerciseDefinition[] = [
     },
     initialModes: {
       ip: "auto",
-      dns: "manual",
+      dns: "auto",
     },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24，DHCP 已开启",
-        "地址池 192.168.1.100-200，默认下发 DNS 为 114.114.114.114",
-      ],
-      computer: [
-        "自动获取 IP，当前租到 192.168.1.101",
-        "DNS 被手动改为 1.1.1.300（非法地址）",
-      ],
-    },
-    allowedActions: [
-      "在网卡中改为自动获取 DNS",
-      "或手动填入 114.114.114.114 / 223.5.5.5",
-      "在终端使用 ipconfig、ping 观察配置与连通差异",
-    ],
-    symptoms: [
-      "ipconfig 显示 DNS 为 1.1.1.300",
-      "ping 192.168.1.1 或 114.114.114.114 正常",
-      "ping baidu.com 提示无法解析目标主机",
-    ],
-    resolution: [
-      "通过 ipconfig 记录当前有效 IP 与错误 DNS。",
-      "改为自动或重新填写合法 DNS。",
-      "重新执行 ping baidu.com，确认解析与连通恢复。",
-    ],
-    verificationSteps: [
-      "执行 ping baidu.com 检查域名解析是否恢复。",
-    ],
-    takeaways: [
-      "能 ping 通 IP 却解析不了域名时应优先检查 DNS。",
-      "公共 DNS 地址需要写全四段且在 0-255 范围内。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "确认内网连通",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "测试域名解析",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "qq.com"]),
-    desktopTools: ["network", "terminal"],
+    desktopTools: ["router", "network", "terminal"],
+    domainMap: createDomainMap([]),
+    dhcpStatus: "unavailable",
   },
   {
     id: 3,
-    title: "练习 3｜内网正常外网失败",
-    summary: "同事反映局域网资源可用但访问互联网失败。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
+    title: "练习 3｜域名访问异常",
+    summary: "局域网资源访问正常，但输入网址始终解析失败，请检查 DNS 配置并再次测试 ping baidu.com。",
     scenario:
-      "新入职同事手动配置静态 IP 后能访问局域网共享，却无法访问互联网，需要你确认配置并排除故障。",
-    objectives: [
-      "通过 ipconfig 判断默认网关是否正确。",
-      "修正网关地址后再次测试连通。",
-      "区分内网互通与访问外网的差异。",
+      "用户反馈局域网共享盘、打印机都正常，但访问互联网总是提示无法解析域名。检查 ipconfig 发现 IP 和网关正确，只有 DNS 被手动填成了无效值，需要恢复为可用的公共 DNS。",
+    verificationSteps: [
+      "将 DNS 改为自动获取，或手动填写 114.114.114.114 / 223.5.5.5。",
+      "执行 ping baidu.com，确认域名能够解析并连通。",
     ],
     hints: [
-      "默认网关应为 192.168.1.1。",
-      "改完网关后可先 ping 114.114.114.114，再测试域名。",
-      "静态配置时注意避免与 DHCP 地址池重叠。",
+      "DNS 地址需要是合法的 IPv4。",
+      "常见的公共 DNS 包括 114.114.114.114 和 223.5.5.5。",
     ],
     initialNetwork: {
-      ipAddress: "192.168.1.10",
+      ipAddress: "192.168.1.101",
       subnetMask: "255.255.255.0",
-      gateway: "192.168.1.254",
-      dns: "114.114.114.114",
+      gateway: "192.168.1.1",
+      dns: "1.1.1.300",
     },
     initialRouter: {
-      dhcpEnabled: false,
+      dhcpEnabled: true,
       lanGateway: "192.168.1.1",
       lanSubnetMask: "255.255.255.0",
       dhcpRangeStart: "192.168.1.100",
@@ -230,79 +119,30 @@ export const exercises: ExerciseDefinition[] = [
       wanIp: "100.64.1.4",
       wanGateway: "100.64.1.1",
     },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24，DHCP 关闭",
-        "需要手动为终端配置 IP",
-      ],
-      computer: [
-        "静态 IP 192.168.1.10/24",
-        "默认网关误写为 192.168.1.254",
-      ],
+    initialModes: {
+      ip: "auto",
+      dns: "manual",
     },
-    allowedActions: [
-      "修改网关为 192.168.1.1",
-      "保持 DNS 为 114.114.114.114",
-      "使用 ipconfig、ping 逐项确认配置与连通",
-    ],
-    symptoms: [
-      "ping 192.168.1.1 超时或提示不可达",
-      "ping 192.168.1.254 无响应",
-      "ping baidu.com 请求超时",
-    ],
-    resolution: [
-      "确认当前网关字段为 192.168.1.254。",
-      "改为 192.168.1.1 后重新测试网关与公网 IP。",
-      "最后 ping baidu.com 验证域名解析。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认默认网关已更新为 192.168.1.1。",
-      "使用 ping 192.168.1.1 验证可达性。",
-      "依次 ping 114.114.114.114 与 baidu.com，确认外网与域名访问恢复。",
-    ],
-    takeaways: [
-      "默认网关决定是否能出网，写错会导致外网不可达。",
-      "静态 IP 需与网关处于同一网段。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "应先确保能互通",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "验证外网 IP",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "验证域名解析",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "taobao.com"]),
     desktopTools: ["network", "terminal"],
+    domainMap: createDomainMap(["baidu.com"]),
   },
   {
     id: 4,
-    title: "练习 4｜网关莫名不通",
-    summary: "电脑手工配置后仍无法稳定访问网关。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
+    title: "练习 4｜网络时断时续",
+    summary: "电脑经常断网并提示冲突，需要调整 IP 配置后再用 ping baidu.com 确认恢复。",
     scenario:
-      "电脑手工配置 IP 后，子网掩码被误填为 255.255.0.0，导致 ARP 请求异常，与网关不通。",
-    objectives: [
-      "识别子网掩码与网段边界的关系。",
-      "修正掩码后验证局域网互通。",
-      "确认可以访问外部网络。",
+      "新加入网络的电脑手动写了 192.168.1.100，与其他设备冲突导致外网全部超时。请调整 IPv4 设置，避免冲突后再测试对 baidu.com 的连通性。",
+    verificationSteps: [
+      "将 IP 模式改为自动，或手动换成未被占用的地址。",
+      "运行 ping baidu.com，确认冲突解除并且可以访问互联网。",
     ],
     hints: [
-      "正确的掩码应为 255.255.255.0。",
-      "掩码越大，广播域越大，容易造成错误判断。",
-      "修改掩码后务必重新 ping 网关。",
+      "IP 冲突时 ping 会提示请求超时，并且同段其他设备也无法通信。",
+      "改成自动获取即可让 DHCP 分配一个新的可用地址。",
     ],
     initialNetwork: {
-      ipAddress: "192.168.1.150",
-      subnetMask: "255.255.0.0",
+      ipAddress: "192.168.1.100",
+      subnetMask: "255.255.255.0",
       gateway: "192.168.1.1",
       dns: "114.114.114.114",
     },
@@ -317,595 +157,12 @@ export const exercises: ExerciseDefinition[] = [
       wanIp: "100.64.1.5",
       wanGateway: "100.64.1.1",
     },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24",
-        "DHCP 保持开启，提供 192.168.1.100-200",
-      ],
-      computer: [
-        "静态 IP 192.168.1.150",
-        "子网掩码误填 255.255.0.0",
-      ],
-    },
-    allowedActions: [
-      "将子网掩码改为 255.255.255.0",
-      "维持其他参数不变",
-      "通过 ipconfig、ping 检查网段划分与连通",
-    ],
-    symptoms: [
-      "ping 192.168.1.1 请求超时",
-      "ipconfig 显示掩码异常",
-      "即便 DNS 正确也无法访问外部网络",
-    ],
-    resolution: [
-      "检查 ipconfig 输出的子网掩码字段。",
-      "修正为 255.255.255.0 后重新测试。",
-      "确认能 ping 网关、公共 IP 与域名。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认掩码已调整为 255.255.255.0。",
-      "使用 ping 192.168.1.1 验证网关稳定响应。",
-      "依次 ping 114.114.114.114 与 baidu.com 确认外网连通。",
-    ],
-    takeaways: [
-      "掩码定义了网络与主机位，错误的掩码会导致寻址混乱。",
-      "排查时应优先验证网关连通。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "修正掩码后应立即测试",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "验证外网连通",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "检测 DNS",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "jd.com"]),
-    desktopTools: ["network", "terminal"],
-    requiresSubnetMatchForGateway: true,
-  },
-  {
-    id: 5,
-    title: "练习 5｜新设备无法上线",
-    summary: "实验室新增电脑无法自动获取地址。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "实验室路由器地址池仅 192.168.1.2-192.168.1.5，新增电脑无法自动获取地址，老设备仍可上网。",
-    objectives: [
-      "识别 DHCP 地址池不足导致的 169.254.x.x 现象。",
-      "通过调整路由器或静态配置恢复连通。",
-      "再次验证公网连通性。",
-    ],
-    hints: [
-      "可以在路由器将地址池扩大到 192.168.1.100-200。",
-      "或直接给电脑手动分配一个未冲突的地址。",
-      "修改后重新执行 ipconfig /all，确认租约信息。",
-    ],
-    initialNetwork: {
-      ipAddress: "",
-      subnetMask: "",
-      gateway: "",
-      dns: "",
-    },
-    initialRouter: {
-      dhcpEnabled: true,
-      lanGateway: "192.168.1.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "192.168.1.2",
-      dhcpRangeEnd: "192.168.1.5",
-      dhcpDns: "114.114.114.114",
-      wanConnected: true,
-      wanIp: "100.64.1.6",
-      wanGateway: "100.64.1.1",
-    },
     initialModes: {
-      ip: "auto",
-      dns: "auto",
+      ip: "manual",
+      dns: "manual",
     },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24",
-        "DHCP 地址池过小，仅 192.168.1.2-5",
-      ],
-      computer: [
-        "设置为自动获取，但迟迟拿不到地址",
-        "最终落入 169.254.*.*",
-      ],
-    },
-    allowedActions: [
-      "在路由器扩大 DHCP 地址池",
-      "或在电脑改为静态 192.168.1.x",
-      "使用 ipconfig /renew 与 ping 验证",
-    ],
-    symptoms: [
-      "ipconfig 显示 169.254.x.x",
-      "ping 192.168.1.1 请求超时",
-      "老电脑仍可访问外网",
-    ],
-    resolution: [
-      "在终端确认 APIPA 地址。",
-      "调整路由器地址池或手动配置 192.168.1.50。",
-      "重新连接后验证网关与公网。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认已分配到 192.168.1.x 且显示正确网关。",
-      "使用 ping 192.168.1.1 测试网关响应。",
-      "使用 ping 114.114.114.114 与 ping baidu.com 验证外网与域名访问。",
-    ],
-    takeaways: [
-      "地址池耗尽时，新设备会拿不到有效租约。",
-      "扩大地址池或采用静态保留可快速解决。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "确认恢复租约后应可互通",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "外网站点",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "youku.com"]),
-    desktopTools: ["router", "network", "terminal"],
-    dhcpStatus: "pool-exhausted",
-  },
-  {
-    id: 6,
-    title: "练习 6｜网络时断时续",
-    summary: "办公室电脑偶发掉线并弹出 IP 冲突提示。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "电脑 A 与电脑 B 都手动写成 192.168.1.50，网络时断时续并提示 IP 冲突，需要更换地址。",
-    objectives: [
-      "通过现象判断是否存在 IP 冲突。",
-      "将其中一台改为自动获取或换成未占用地址。",
-      "恢复稳定连通。",
-    ],
-    hints: [
-      "冲突时 ping 会间歇超时，系统可能弹出气泡提示。",
-      "改用 DHCP 或静态 192.168.1.60 即可解决。",
-      "完成后可再次观察 ping 是否稳定。",
-    ],
-    initialNetwork: {
-      ipAddress: "192.168.1.50",
-      subnetMask: "255.255.255.0",
-      gateway: "192.168.1.1",
-      dns: "114.114.114.114",
-    },
-    initialRouter: {
-      dhcpEnabled: true,
-      lanGateway: "192.168.1.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "192.168.1.100",
-      dhcpRangeEnd: "192.168.1.200",
-      dhcpDns: "114.114.114.114",
-      wanConnected: true,
-      wanIp: "100.64.1.7",
-      wanGateway: "100.64.1.1",
-    },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24，DHCP 正常",
-        "无特别限制",
-      ],
-      computer: [
-        "静态 IP 192.168.1.50",
-        "网络时断时续，提示“检测到 IP 地址冲突”",
-      ],
-    },
-    allowedActions: [
-      "改为自动获取 IP",
-      "或手动更改为未使用的地址，如 192.168.1.60",
-      "通过 ipconfig、ping 网关验证是否稳定",
-    ],
-    symptoms: [
-      "ping 网关或外网间歇超时",
-      "系统弹出 IP 冲突提醒",
-      "同事设备也会掉线",
-    ],
-    resolution: [
-      "确认当前 IP 与冲突提示。",
-      "改为自动或换成不冲突的地址。",
-      "持续 ping 网关，确认不再丢包。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认当前地址已更改且无冲突提示。",
-      "持续 ping 192.168.1.1，观察是否稳定回复。",
-      "再 ping baidu.com，确认外部访问不再受影响。",
-    ],
-    takeaways: [
-      "静态地址需规划管理，避免与他人重复。",
-      "冲突通常表现为间歇丢包或系统气泡提示。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "修复冲突后应稳定",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "用于确认外网",
-      },
-      {
-        name: "bilibili.com",
-        ip: DOMAIN_IPS["bilibili.com"],
-        description: "示例域名",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bilibili.com", "qq.com"]),
     desktopTools: ["network", "terminal"],
-    conflictingIp: "192.168.1.50",
-  },
-  {
-    id: 7,
-    title: "练习 7｜全班打不开域名",
-    summary: "校园网所有电脑都无法解析网站域名。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "校园网路由器的上游 DNS 被误写成 203.0.113.123，全班同学都无法打开域名，只能 ping 通外网 IP。",
-    objectives: [
-      "判断问题在于路由器 DNS。",
-      "在路由器或电脑侧修正 DNS 设置。",
-      "验证域名访问恢复。",
-    ],
-    hints: [
-      "可将路由器 DNS 改为 114.114.114.114 / 223.5.5.5。",
-      "临时应急可在本机手动填写公共 DNS。",
-      "修改后需要重新获取租约或刷新 DNS 缓存。",
-    ],
-    initialNetwork: {
-      ipAddress: "",
-      subnetMask: "",
-      gateway: "",
-      dns: "",
-    },
-    initialRouter: {
-      dhcpEnabled: true,
-      lanGateway: "192.168.1.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "192.168.1.100",
-      dhcpRangeEnd: "192.168.1.200",
-      dhcpDns: "203.0.113.123",
-      wanConnected: true,
-      wanIp: "100.64.1.8",
-      wanGateway: "100.64.1.1",
-    },
-    initialModes: {
-      ip: "auto",
-      dns: "auto",
-    },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24，DHCP 正常",
-        "上游 DNS 误设为 203.0.113.123",
-      ],
-      computer: [
-        "自动获取到 192.168.1.x",
-        "DNS 继承了错误的 203.0.113.123",
-      ],
-    },
-    allowedActions: [
-      "在路由器将 DNS 改为 114.114.114.114",
-      "或在网卡手动覆盖 DNS",
-      "在终端使用 ipconfig、ping 域名进行验证",
-    ],
-    symptoms: [
-      "ping 114.114.114.114 正常",
-      "ping baidu.com 无法解析",
-      "全网设备均出现相同问题",
-    ],
-    resolution: [
-      "确认本机 DNS 为 203.0.113.123。",
-      "在路由器或电脑侧改为可用 DNS。",
-      "重新获取租约，验证域名解析。",
-    ],
-    verificationSteps: [
-      "使用 ipconfig 查看 DNS 是否已更新为 114.114.114.114 或其他可用地址。",
-      "ping 192.168.1.1，确认内网无异常。",
-      "ping baidu.com，确保域名能够正确解析并响应。",
-    ],
-    takeaways: [
-      "路由器 DNS 错误会影响整个局域网。",
-      "可通过本机临时覆盖 DNS 进行快速恢复。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "确保内网无异常",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "验证外网 IP",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "域名测试",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "taobao.com"]),
-    desktopTools: ["router", "network", "terminal"],
-  },
-  {
-    id: 8,
-    title: "练习 8｜外网整站不可达",
-    summary: "办公室反馈所有外网 IP 均无法 ping 通。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "网关可以 ping 通，DNS 也看似正确，但 ping 外网 IP 仍然超时，需要确认路由器的上联状态。",
-    objectives: [
-      "区分内网故障与外网故障。",
-      "通过路由器状态页确认 WAN 是否断开。",
-      "能够向用户解释需要检查上联或联系运营商。",
-    ],
-    hints: [
-      "若 WAN 未连接，再怎么改主机配置也无效。",
-      "可在路由器界面查看 WAN 状态灯或拨号状态。",
-      "课堂演示可提示“物理网线未插好”。",
-    ],
-    initialNetwork: {
-      ipAddress: "",
-      subnetMask: "",
-      gateway: "",
-      dns: "",
-    },
-    initialRouter: {
-      dhcpEnabled: true,
-      lanGateway: "192.168.1.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "192.168.1.100",
-      dhcpRangeEnd: "192.168.1.200",
-      dhcpDns: "114.114.114.114",
-      wanConnected: false,
-      wanIp: undefined,
-      wanGateway: undefined,
-    },
-    initialModes: {
-      ip: "auto",
-      dns: "auto",
-    },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.1.1/24",
-        "WAN 状态：未连接",
-      ],
-      computer: [
-        "自动获取到 192.168.1.x",
-        "DNS 为 114.114.114.114",
-      ],
-    },
-    allowedActions: [
-      "查看路由器 WAN 状态",
-      "使用 ipconfig、ping 区分内外网",
-      "记录问题并建议检查外线",
-    ],
-    symptoms: [
-      "ping 192.168.1.1 正常",
-      "ping 114.114.114.114 请求超时",
-      "ping baidu.com 解析后仍然超时",
-    ],
-    resolution: [
-      "确认内网连通正常。",
-      "查看路由器 WAN 状态，发现未连接。",
-      "告知需要检查上联线路或联系运营商。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认主机地址配置正常。",
-      "ping 192.168.1.1，验证内网连接。",
-      "ping 114.114.114.114 与 baidu.com，确认外网仍不可达并记录现象。",
-    ],
-    takeaways: [
-      "排查顺序：先看网关，再测外网 IP，最后看域名。",
-      "WAN 未上线时，本地如何配置都无济于事。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "192.168.1.1",
-        description: "确认内网",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "域名连通测试",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com"]),
-    desktopTools: ["router", "terminal"],
-  },
-  {
-    id: 9,
-    title: "练习 9｜换网段后的混乱",
-    summary: "老师更换了路由器网段后学生电脑无法访问网关。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "老师把路由器 LAN 改到 192.168.10.1/24，却忘了改 DHCP，学生电脑拿到 192.168.1.101，无法访问网关。",
-    objectives: [
-      "识别网关地址与主机地址不在同一网段的问题。",
-      "在路由器同步调整 DHCP 配置或在电脑临时改网段。",
-      "恢复与网关及外网的连通。",
-    ],
-    hints: [
-      "LAN 改网段时要同时更新 DHCP 地址池。",
-      "临时可手动改为 192.168.10.x 再登陆路由器。",
-      "注意 DNS 也要同步到新的网关。",
-    ],
-    initialNetwork: {
-      ipAddress: "192.168.1.101",
-      subnetMask: "255.255.255.0",
-      gateway: "192.168.1.1",
-      dns: "192.168.1.1",
-    },
-    initialRouter: {
-      dhcpEnabled: true,
-      lanGateway: "192.168.10.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "192.168.1.100",
-      dhcpRangeEnd: "192.168.1.200",
-      dhcpDns: "192.168.1.1",
-      wanConnected: true,
-      wanIp: "100.64.1.9",
-      wanGateway: "100.64.1.1",
-    },
-    initialSetup: {
-      router: [
-        "LAN: 192.168.10.1/24",
-        "DHCP 仍旧发放 192.168.1.x",
-      ],
-      computer: [
-        "当前地址 192.168.1.101",
-        "默认网关 192.168.1.1（实际不存在）",
-      ],
-    },
-    allowedActions: [
-      "在路由器同步修改 DHCP 地址池与网关",
-      "或在电脑临时改为 192.168.10.x",
-      "使用 ipconfig、ping 验证",
-    ],
-    symptoms: [
-      "ping 192.168.10.1 不通",
-      "ipconfig 显示网关 192.168.1.1",
-      "ping baidu.com 超时",
-    ],
-    resolution: [
-      "确认当前 IP 与路由器不在同一网段。",
-      "调整 DHCP 或手动改为 192.168.10.20。",
-      "恢复后再次测试网关与域名。",
-    ],
-    verificationSteps: [
-      "运行 ipconfig，确认已处于 192.168.10.x 网段并获得正确网关。",
-      "ping 192.168.10.1 验证可以进入新网段。",
-      "ping baidu.com 或 114.114.114.114，确保外网访问恢复。",
-    ],
-    takeaways: [
-      "改网段时必须同时调整 LAN IP、掩码与 DHCP。",
-      "主机地址应与网关处于同一网段。",
-    ],
-    pingTargets: [
-      {
-        name: "新网关",
-        ip: "192.168.10.1",
-        description: "目标路由器地址",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "外网检测",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "jd.com"]),
-    desktopTools: ["router", "network", "terminal"],
-  },
-  {
-    id: 10,
-    title: "练习 10｜电脑和路由器不在一个网段",
-    summary: "升级网络后电脑仍保留旧网段导致无法访问新路由器。修改后你可以尝试用 ipconfig 命令来检查网络状态。",
-    scenario:
-      "升级网络后路由器改为 10.0.0.1，学生电脑依旧保留旧的 192.168.1.88，怎么都 ping 不通网关。",
-    objectives: [
-      "判断电脑与网关不在同一网段。",
-      "改写正确的 IP、掩码、网关与 DNS。",
-      "验证恢复外网访问。",
-    ],
-    hints: [
-      "新的网段为 10.0.0.0/24，网关 10.0.0.1。",
-      "建议填写 10.0.0.10 作为演示地址。",
-      "DNS 可继续使用 114.114.114.114。",
-    ],
-    initialNetwork: {
-      ipAddress: "192.168.1.88",
-      subnetMask: "255.255.255.0",
-      gateway: "192.168.1.1",
-      dns: "114.114.114.114",
-    },
-    initialRouter: {
-      dhcpEnabled: false,
-      lanGateway: "10.0.0.1",
-      lanSubnetMask: "255.255.255.0",
-      dhcpRangeStart: "10.0.0.100",
-      dhcpRangeEnd: "10.0.0.200",
-      dhcpDns: "114.114.114.114",
-      wanConnected: true,
-      wanIp: "100.64.1.10",
-      wanGateway: "100.64.1.1",
-    },
-    initialSetup: {
-      router: [
-        "LAN: 10.0.0.1/24",
-        "DHCP 暂未启用，需要静态配置",
-      ],
-      computer: [
-        "仍旧写着 192.168.1.88",
-        "网关为 192.168.1.1",
-      ],
-    },
-    allowedActions: [
-      "将电脑改为 10.0.0.10 / 255.255.255.0",
-      "默认网关填 10.0.0.1，DNS 114.114.114.114",
-      "使用 ipconfig、ping 验证",
-    ],
-    symptoms: [
-      "ping 10.0.0.1 请求超时",
-      "ipconfig 显示旧网段",
-      "外网全部不可达",
-    ],
-    resolution: [
-      "确认当前网段与路由器不一致。",
-      "改写为 10.0.0.10 / 255.255.255.0 / 10.0.0.1。",
-      "验证外网与域名恢复。",
-    ],
-    verificationSteps: [
-      "执行 ipconfig，确认地址、网关与 DNS 已切换到 10.0.0.x 网段。",
-      "ping 10.0.0.1，确保可以访问路由器。",
-      "ping 114.114.114.114 与 baidu.com，确认外网与域名正常。",
-    ],
-    takeaways: [
-      "网关与主机必须在同一网段才能互通。",
-      "变更网段后要及时同步终端配置。",
-    ],
-    pingTargets: [
-      {
-        name: "路由器网关",
-        ip: "10.0.0.1",
-        description: "新的局域网出口",
-      },
-      {
-        name: "114.114.114.114",
-        ip: "114.114.114.114",
-        description: "公共 DNS",
-      },
-      {
-        name: "baidu.com",
-        ip: DOMAIN_IPS["baidu.com"],
-        description: "域名连通",
-      },
-    ],
-    domainMap: createDomainMap(["baidu.com", "bing.com", "youku.com"]),
-    desktopTools: ["network", "terminal"],
+    domainMap: createDomainMap(["baidu.com"]),
+    conflictingIp: "192.168.1.100",
   },
 ];

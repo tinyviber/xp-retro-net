@@ -26,12 +26,6 @@ export interface RouterSettings {
 
 export type DesktopTool = "router" | "network" | "terminal";
 
-export interface PingTarget {
-  name: string;
-  ip: string;
-  description?: string;
-}
-
 export type DhcpStatus = "normal" | "unavailable" | "pool-exhausted";
 
 export interface ExerciseDefinition {
@@ -39,7 +33,7 @@ export interface ExerciseDefinition {
   title: string;
   summary: string;
   scenario: string;
-  objectives: string[];
+  verificationSteps: string[];
   hints: string[];
   initialNetwork: NetworkSettings;
   initialRouter: RouterSettings;
@@ -47,18 +41,8 @@ export interface ExerciseDefinition {
     ip: AssignmentMode;
     dns: AssignmentMode;
   };
-  initialSetup: {
-    router: string[];
-    computer: string[];
-  };
-  allowedActions: string[];
-  symptoms: string[];
-  resolution: string[];
-  verificationSteps: string[];
-  takeaways: string[];
-  pingTargets: PingTarget[];
-  domainMap: Record<string, string>;
   desktopTools: DesktopTool[];
+  domainMap: Record<string, string>;
   dhcpStatus?: DhcpStatus;
   requiresSubnetMatchForGateway?: boolean;
   conflictingIp?: string;
